@@ -1,0 +1,64 @@
+{
+  "postal": "L9T",
+  "riding": "Milton",
+  "reps": [
+    {
+      "id": "federal-mp",
+      "level": "Federal",
+      "title": "Member of Parliament",
+      "name": "Adam van Koeverden",
+      "party": "Liberal",
+      "partyColor": "#D71920",
+      "riding": "Milton",
+      "photo": "/avatars/avk.png",
+      "committee": "Heritage Committee (CHPC)",
+      "attendance": 90,
+      "email": "adam.vankoeverden@parl.gc.ca",
+      "lobbyMeetings": [
+        { "date": "Jan 15, 2025", "group": "Dairy Farmers of Canada" },
+        { "date": "Dec 3, 2024", "group": "Tech Council of Canada" }
+      ]
+    },
+    {
+      "id": "provincial-mpp",
+      "level": "Provincial",
+      "title": "Member of Provincial Parliament",
+      "name": "Zeeshan Hamid",
+      "party": "Progressive Conservative",
+      "partyColor": "#003F8A",
+      "riding": "Milton",
+      "photo": "/avatars/zeehamid.png",
+      "committee": "Standing Committee on Finance",
+      "attendance": 90,
+      "email": "zee.hamid@pc.ola.org",
+      "lobbyMeetings": []
+    },
+    {
+      "id": "municipal-mayor",
+      "level": "Municipal",
+      "title": "Mayor",
+      "name": "Gord Krantz",
+      "party": "Independent",
+      "partyColor": "#2D7A45",
+      "riding": "Town of Milton",
+      "photo": "/avatars/mayor.png",
+      "committee": "Town Council",
+      "attendance": 96,
+      "email": "mayor@milton.ca",
+      "lobbyMeetings": []
+    },
+    {
+      "id": "municipal-ward4",
+      "level": "Municipal",
+      "title": "Ward 4 Councillor",
+      "name": "John Challinor",
+      "party": "Independent",
+      "partyColor": "#2D7A45",
+      "riding": "Ward 4 - Derry Heights",
+      "committee": "Planning and Development Committee",
+      "attendance": 91,
+      "email": "john.challinor@milton.ca",
+      "lobbyMeetings": []
+    }
+  ]
+}

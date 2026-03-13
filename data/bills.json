@@ -1,0 +1,225 @@
+[
+  {
+    "id": "bill-1",
+    "level": "Federal",
+    "billNumber": "C-18",
+    "title": "An Act respecting online communications platforms that make news content available to persons in Canada",
+    "shortTitle": "Online News Act",
+    "jurisdiction": "Canada",
+    "publishedDate": "2023-04-05",
+    "sponsor": "Pablo Rodriguez (Minister of Canadian Heritage)",
+    "status": "Royal Assent",
+    "statusStage": 6,
+    "totalStages": 6,
+    "affectsMilton": true,
+    "tags": ["Media", "Tech Platforms", "News", "Compensation"],
+    "gist": "Requires major tech platforms like Google and Meta to compensate Canadian news publishers when their content appears on platform feeds. Aims to support local journalism and ensure fair revenue sharing in the digital age.",
+    "aiSummary": "The Online News Act (Bill C-18) establishes a framework requiring digital platforms that make Canadian news content available to enter into fair compensation agreements with news organizations. The legislation applies to platforms with significant bargaining power in the Canadian digital news market.\n\nThe Act allows news businesses to negotiate individually or collectively with platforms, creating a level playing field for smaller publishers. If negotiations fail, mandatory arbitration ensures fair compensation. The Canadian Radio-television and Telecommunications Commission (CRTC) oversees compliance.\n\nThe law responds to the dramatic decline in journalism jobs and local news outlets across Canada, particularly affecting communities like Milton where local news coverage has diminished. Revenue sharing from platforms helps sustain investigative journalism and civic reporting.\n\nCritics argue the law may reduce news visibility on social media. Meta responded by blocking news links in Canada. However, proponents maintain that free access to professionally-produced news undermines the economic foundation of quality journalism. The law creates a sustainable funding model for news organizations serving Canadian communities.",
+    "keyPoints": [
+      "Tech platforms must negotiate fair compensation with Canadian news publishers",
+      "CRTC oversees implementation and ensures compliance with the framework",
+      "Supports sustainability of local journalism in communities like Milton",
+      "Enables collective bargaining for smaller news organizations",
+      "Includes mandatory arbitration if negotiations fail",
+      "Similar legislation has been implemented in Australia with success"
+    ],
+    "forArguments": [
+      "Ensures fair compensation for journalists and news organizations whose content generates platform revenue",
+      "Protects local journalism jobs and sustains reporting in communities like Milton",
+      "Levels the playing field between large tech platforms and news publishers"
+    ],
+    "againstArguments": [
+      "May reduce visibility of Canadian news on global platforms like Facebook and Google",
+      "Could inadvertently benefit large media conglomerates more than small local outlets",
+      "Platforms may choose to block news entirely rather than negotiate, reducing public access"
+    ],
+    "lobbyMeetings": [
+      { "date": "Feb 10, 2023", "group": "News Media Canada", "position": "For" },
+      { "date": "Jan 28, 2023", "group": "Google Canada", "position": "Against" },
+      { "date": "Jan 20, 2023", "group": "Meta Platforms Inc.", "position": "Against" },
+      { "date": "Feb 15, 2023", "group": "Canadian Association of Journalists", "position": "For" }
+    ],
+    "citedSources": [
+      { "label": "Full Bill Text", "url": "https://www.parl.ca/DocumentViewer/en/44-1/bill/C-18/royal-assent" },
+      { "label": "CRTC Implementation", "url": "https://crtc.gc.ca/eng/archive/2023/2023-329.htm" }
+    ]
+  },
+  {
+    "id": "bill-2",
+    "level": "Federal",
+    "billNumber": "C-63",
+    "title": "Online Harms Act",
+    "shortTitle": "Online Harms Act",
+    "jurisdiction": "Canada",
+    "publishedDate": "2024-02-26",
+    "sponsor": "Arif Virani (Minister of Justice)",
+    "status": "Committee",
+    "statusStage": 3,
+    "totalStages": 6,
+    "affectsMilton": true,
+    "tags": ["Child Safety", "Online Content", "Social Media", "Harmful Content"],
+    "gist": "Creates a new regulatory framework to protect Canadians, especially children, from harmful online content including child sexual abuse material, cyberbullying, hate speech, and content that incites violence or terrorism.",
+    "aiSummary": "The Online Harms Act introduces comprehensive regulation of online platforms operating in Canada. It establishes a Digital Safety Commission to enforce new duty of care obligations requiring platforms to prevent and remove seven categories of harmful content, with the strongest protections for child sexual abuse material.\n\nPlatforms must implement content moderation systems, provide reporting mechanisms, and maintain transparency about how they address harmful content. The Act includes significant penalties for non-compliance, including fines up to 6% of global revenue. A Digital Safety Ombudsperson will advocate for users and help resolve complaints.\n\nFor families in communities like Milton, the legislation aims to make online spaces safer for children and youth. Parents gain new tools to protect kids from cyberbullying, exploitation, and exposure to violent extremist content. The Act also strengthens existing hate speech and harassment laws.\n\nDebate centers on balancing online safety with freedom of expression. Supporters argue urgent action is needed to protect vulnerable users. Critics warn about potential overreach, arguing some provisions could enable censorship or limit legitimate speech. The Committee stage involves detailed examination of these concerns.",
+    "keyPoints": [
+      "Establishes Digital Safety Commission to regulate online platforms",
+      "Requires platforms to proactively prevent seven categories of harmful content",
+      "Strongest provisions protect children from exploitation and abuse material",
+      "Creates Digital Safety Ombudsperson to advocate for users",
+      "Significant penalties for platforms that fail duty of care obligations",
+      "Includes transparency requirements and regular safety audits"
+    ],
+    "forArguments": [
+      "Provides urgently needed protections for children and vulnerable users from online harms",
+      "Holds powerful tech platforms accountable with meaningful enforcement mechanisms",
+      "Addresses the mental health crisis linked to cyberbullying and harmful online content"
+    ],
+    "againstArguments": [
+      "Broad definitions of harmful content could enable government overreach and censor legitimate speech",
+      "May be difficult to enforce against global platforms with servers outside Canada",
+      "Rushed implementation without adequate consultation with civil liberties advocates"
+    ],
+    "lobbyMeetings": [
+      { "date": "Mar 5, 2024", "group": "Canadian Centre for Child Protection", "position": "For" },
+      { "date": "Mar 12, 2024", "group": "OpenMedia", "position": "Against" },
+      { "date": "Feb 28, 2024", "group": "TikTok Canada", "position": "Neutral" }
+    ],
+    "citedSources": [
+      { "label": "Full Bill Text", "url": "https://www.parl.ca/DocumentViewer/en/44-1/bill/C-63/first-reading" },
+      { "label": "Justice Canada Backgrounder", "url": "https://www.justice.gc.ca/eng/csj-sjc/pl/charter-charte/c63.html" }
+    ]
+  },
+  {
+    "id": "bill-3",
+    "level": "Provincial",
+    "billNumber": "Bill 23",
+    "title": "More Homes Built Faster Act, 2022",
+    "shortTitle": "More Homes Built Faster Act",
+    "jurisdiction": "Ontario",
+    "publishedDate": "2022-10-25",
+    "sponsor": "Steve Clark (Minister of Municipal Affairs and Housing)",
+    "status": "Passed",
+    "statusStage": 6,
+    "totalStages": 6,
+    "affectsMilton": true,
+    "tags": ["Housing", "Development", "Zoning", "Municipal", "Parkland"],
+    "gist": "Streamlines housing approvals and reduces development fees to accelerate home construction across Ontario. Directly affects Milton by reducing parkland requirements for new subdivisions and overriding some municipal zoning controls.",
+    "aiSummary": "Bill 23 introduces sweeping changes to Ontario's planning and development framework with the goal of building 1.5 million homes by 2031. The legislation reduces development charges, limits parkland dedication requirements, and restricts municipalities' ability to impose conditions on developers.\n\nFor Milton, one of Ontario's fastest-growing communities, the impact is significant. The Town must now accept lower parkland contributions from developers building new subdivisions like those planned for Derry Heights and Tremaine Road. Municipal planners estimate Milton will lose $20-30 million in parkland funding over the next decade, affecting the town's ability to create green spaces for new residents.\n\nThe Act also enables 'as-of-right' permissions for certain housing types, reducing the ability of Town Council and residents to influence development through public consultation. MPP Parm Gill supported the bill, arguing Milton needs more housing to accommodate population growth and improve affordability.\n\nEnvironmental and municipal groups opposed the legislation. They argue it downloads costs onto municipalities, reduces green space in rapidly developing areas, and removes important community safeguards. The long-term impact on Milton's livability and fiscal sustainability remains a key local concern.",
+    "keyPoints": [
+      "Reduces development charges and parkland requirements to lower housing construction costs",
+      "Limits municipal authority to impose conditions on residential development",
+      "Milton loses significant parkland funding for rapidly growing neighborhoods",
+      "Enables faster approvals for certain housing types with fewer consultation requirements",
+      "Part of provincial plan to build 1.5 million homes by 2031",
+      "Supported by MPP Parm Gill as necessary to address housing crisis"
+    ],
+    "forArguments": [
+      "Accelerates housing supply in high-growth areas like Milton, improving affordability for families",
+      "Reduces bureaucratic delays that slow down needed housing construction",
+      "Lowers development costs that are typically passed on to homebuyers"
+    ],
+    "againstArguments": [
+      "Reduces parkland and green space in rapidly developing communities like Milton",
+      "Downloads costs onto municipalities without providing alternative funding sources",
+      "Removes important public consultation and environmental protection safeguards"
+    ],
+    "lobbyMeetings": [
+      { "date": "Oct 10, 2022", "group": "Building Industry and Land Development Association (BILD)", "position": "For" },
+      { "date": "Oct 15, 2022", "group": "Environmental Defence", "position": "Against" },
+      { "date": "Oct 12, 2022", "group": "Association of Municipalities of Ontario (AMO)", "position": "Against" },
+      { "date": "Oct 20, 2022", "group": "Ontario Home Builders' Association", "position": "For" }
+    ],
+    "citedSources": [
+      { "label": "Full Bill Text", "url": "https://www.ola.org/en/legislative-business/bills/parliament-43/session-1/bill-23" },
+      { "label": "Milton Impact Analysis", "url": "https://www.milton.ca/bill23impact" }
+    ]
+  },
+  {
+    "id": "bill-4",
+    "level": "Municipal",
+    "billNumber": "OPA-31",
+    "title": "Official Plan Amendment No. 31 - Derry Heights Employment Lands Redesignation",
+    "shortTitle": "Derry Heights Rezoning",
+    "jurisdiction": "Town of Milton",
+    "publishedDate": "2025-01-20",
+    "sponsor": "John Challinor (Ward 4 Councillor)",
+    "status": "Second Reading",
+    "statusStage": 2,
+    "totalStages": 6,
+    "affectsMilton": true,
+    "tags": ["Rezoning", "Mixed Use", "Employment Lands", "Derry Heights", "Ward 4"],
+    "gist": "Proposes rezoning 45 hectares of Employment-designated land at Derry Road and James Snow Parkway to Mixed Use, allowing residential and commercial development in an area originally planned for business and industrial use.",
+    "aiSummary": "Official Plan Amendment 31 represents a significant land use change for Milton's Derry Heights neighborhood. The proposal would convert employment lands at the northeast corner of Derry Road and James Snow Parkway from Employment designation to Mixed Use, permitting a combination of residential towers, street-level retail, and office space.\n\nThe developer, Mattamy Homes, argues the site's proximity to GO Transit and Highway 401 makes it ideal for transit-oriented development. The proposal includes 1,200 residential units, 30,000 square feet of retail, and preserved office space. Ward 4 Councillor John Challinor sponsored the amendment, emphasizing the need for diverse housing options in Milton.\n\nHowever, the Derry Heights Business Association opposes the conversion, arguing Milton needs employment lands to provide local jobs and reduce commuter congestion. They note that converting employment lands to residential contradicts Milton's economic development strategy and reduces the Town's ability to attract job-creating businesses.\n\nThe amendment is currently at Second Reading, with a statutory public meeting scheduled. Ward 4 residents have raised concerns about increased traffic on Derry Road, school capacity, and the loss of planned employment opportunities. The Planning and Development Committee is reviewing traffic impact studies and fiscal analysis before the Third Reading vote.",
+    "keyPoints": [
+      "Converts 45 hectares from Employment to Mixed Use designation",
+      "Enables 1,200 residential units plus retail and office space at Derry & James Snow",
+      "Sponsored by Ward 4 Councillor John Challinor",
+      "Currently at Second Reading stage with public consultation ongoing",
+      "Opposed by Derry Heights Business Association and some Ward 4 residents",
+      "Traffic impact and school capacity studies underway"
+    ],
+    "forArguments": [
+      "Site's proximity to GO Transit makes it ideal for transit-oriented residential development",
+      "Provides needed housing supply and diverse unit types in high-demand area",
+      "Mixed-use development creates walkable community with services and amenities"
+    ],
+    "againstArguments": [
+      "Converts employment lands needed to provide local jobs and reduce commuting",
+      "Increases traffic congestion on already-busy Derry Road corridor",
+      "May strain school capacity and municipal services in Ward 4"
+    ],
+    "lobbyMeetings": [
+      { "date": "Jan 25, 2025", "group": "Mattamy Homes", "position": "For" },
+      { "date": "Feb 2, 2025", "group": "Derry Heights Business Association", "position": "Against" },
+      { "date": "Feb 8, 2025", "group": "Milton Chamber of Commerce", "position": "Against" }
+    ],
+    "citedSources": [
+      { "label": "Official Plan Amendment Details", "url": "https://www.milton.ca/opa31" },
+      { "label": "Public Consultation Schedule", "url": "https://www.milton.ca/opa31-consultation" }
+    ]
+  },
+  {
+    "id": "bill-5",
+    "level": "Provincial",
+    "billNumber": "Bill 212",
+    "title": "Reducing Gridlock, Saving You Time Act, 2024",
+    "shortTitle": "Reducing Gridlock Act",
+    "jurisdiction": "Ontario",
+    "publishedDate": "2024-10-21",
+    "sponsor": "Prabmeet Sarkaria (Minister of Transportation)",
+    "status": "Third Reading",
+    "statusStage": 4,
+    "totalStages": 6,
+    "affectsMilton": true,
+    "tags": ["Highway 413", "Transportation", "Infrastructure", "Commuting", "Gridlock"],
+    "gist": "Advances construction of Highway 413 through northern GTA communities including Milton. The 59-kilometer highway aims to reduce commute times but requires expropriating properties and affects environmentally sensitive areas.",
+    "aiSummary": "Bill 212 provides the legislative framework for Highway 413, a major new corridor connecting Highway 400 in Vaughan to Highway 401 in Milton. The province argues the highway is essential to reduce gridlock for the 400,000+ people expected to move to the region by 2031. For Milton commuters facing congestion on the 401, the new route offers an alternative.\n\nThe highway will run through Milton's northern boundary, requiring corridor protection orders that affect 14 properties in the town. Some landowners face expropriation. The route also crosses the Greenbelt and several environmentally significant areas, including headwaters that feed the Credit River and Sixteen Mile Creek.\n\nThe province projects Highway 413 will save commuters up to 30 minutes on cross-GTA trips. However, environmental assessments warn of impacts on wildlife habitats, wetlands, and farmland. The estimated cost has risen to $10 billion, with critics arguing the funds could better support public transit.\n\nBill 212 streamlines the approval process, reducing opportunities for legal challenges. It's currently at Third Reading, with passage expected in spring 2025. Construction would begin in 2026, with completion targeted for 2030-2032. The highway significantly affects Milton's future growth patterns and commuter options.",
+    "keyPoints": [
+      "Enables construction of 59-kilometer Highway 413 from Vaughan to Milton",
+      "14 Milton properties affected by corridor protection and potential expropriation",
+      "Province projects 30-minute commute time savings for cross-GTA trips",
+      "Estimated cost: $10 billion with construction starting 2026",
+      "Route crosses Greenbelt and environmentally sensitive areas in north Milton",
+      "Bill 212 at Third Reading, passage expected spring 2025"
+    ],
+    "forArguments": [
+      "Provides critical transportation infrastructure for rapidly growing Milton and western GTA",
+      "Reduces gridlock on Highway 401, improving commute times and economic productivity",
+      "Creates thousands of construction jobs and supports regional economic development"
+    ],
+    "againstArguments": [
+      "Costs $10 billion that could fund public transit serving more people",
+      "Paves over farmland and environmentally sensitive Greenbelt areas",
+      "Induced demand may lead to more sprawl and traffic within a decade"
+    ],
+    "lobbyMeetings": [
+      { "date": "Nov 5, 2024", "group": "Ontario Road Builders' Association", "position": "For" },
+      { "date": "Nov 10, 2024", "group": "Environmental Defence", "position": "Against" },
+      { "date": "Oct 28, 2024", "group": "Residential Construction Council of Ontario", "position": "For" },
+      { "date": "Nov 12, 2024", "group": "Toronto and Region Conservation Authority", "position": "Against" }
+    ],
+    "citedSources": [
+      { "label": "Full Bill Text", "url": "https://www.ola.org/en/legislative-business/bills/parliament-43/session-2/bill-212" },
+      { "label": "Highway 413 Project Details", "url": "https://www.ontario.ca/highway413" }
+    ]
+  }
+]

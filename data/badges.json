@@ -1,0 +1,50 @@
+[
+  {
+    "id": "watchdog",
+    "name": "The Watchdog",
+    "description": "Read 50 bills",
+    "icon": "dog",
+    "earned": true,
+    "earnedDate": "2025-01-15"
+  },
+  {
+    "id": "delegate",
+    "name": "The Delegate",
+    "description": "Signed a petition",
+    "icon": "clipboard-check",
+    "earned": true,
+    "earnedDate": "2025-02-03"
+  },
+  {
+    "id": "local-hero",
+    "name": "Local Hero",
+    "description": "Attended a council meeting",
+    "icon": "building-2",
+    "earned": true,
+    "earnedDate": "2025-02-20"
+  },
+  {
+    "id": "bill-hawk",
+    "name": "Bill Hawk",
+    "description": "Read 10 bills in one week",
+    "icon": "eye",
+    "earned": false,
+    "earnedDate": null
+  },
+  {
+    "id": "lobbyist",
+    "name": "Follow the Money",
+    "description": "Viewed 5 lobby disclosures",
+    "icon": "dollar-sign",
+    "earned": false,
+    "earnedDate": null
+  },
+  {
+    "id": "streak-30",
+    "name": "30-Day Civic Streak",
+    "description": "30 consecutive days active",
+    "icon": "flame",
+    "earned": false,
+    "earnedDate": null
+  }
+]

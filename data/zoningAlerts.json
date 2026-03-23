@@ -1,0 +1,54 @@
+[
+  {
+    "id": "z1",
+    "title": "Derry Heights Rezoning",
+    "type": "Rezoning",
+    "status": "Active",
+    "urgency": "high",
+    "lat": 43.5183,
+    "lng": -79.8774,
+    "radius": 400,
+    "summary": "Employment lands at Derry Road & James Snow Pkwy proposed for Mixed Use. Public comment period open until April 30.",
+    "date": "2025-03-01",
+    "linkedBillId": "bill-4"
+  },
+  {
+    "id": "z2",
+    "title": "Tremaine Road Subdivision",
+    "type": "New Development",
+    "status": "Approved",
+    "urgency": "medium",
+    "lat": 43.535,
+    "lng": -79.895,
+    "radius": 300,
+    "summary": "420-unit residential subdivision approved under Bill 23 streamlining provisions. Construction begins Q3 2025.",
+    "date": "2025-02-10",
+    "linkedBillId": "bill-3"
+  },
+  {
+    "id": "z3",
+    "title": "Highway 413 Corridor Study",
+    "type": "Infrastructure",
+    "status": "Under Review",
+    "urgency": "high",
+    "lat": 43.556,
+    "lng": -79.86,
+    "radius": 600,
+    "summary": "Provincial corridor protection order issued for Hwy 413 route through Milton's north end. Affects 14 properties.",
+    "date": "2025-01-22",
+    "linkedBillId": "bill-5"
+  },
+  {
+    "id": "z4",
+    "title": "Main St. Heritage Designation",
+    "type": "Heritage",
+    "status": "Proposed",
+    "urgency": "low",
+    "lat": 43.512,
+    "lng": -79.882,
+    "radius": 200,
+    "summary": "Downtown Milton heritage district proposed. 12 buildings on Main St. under review for cultural heritage designation.",
+    "date": "2025-01-05",
+    "linkedBillId": null
+  }
+]

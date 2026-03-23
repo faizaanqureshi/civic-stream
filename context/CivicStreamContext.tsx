@@ -1,0 +1,101 @@
+"use client";
+
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
+import type { CivicStreamState, CivicStreamAction } from "@/types";
+
+const initialState: CivicStreamState = {
+  postalCode: null,
+  riding: null,
+  onboardingComplete: false,
+  streakDays: 10,
+  lastActiveDate: new Date().toISOString().split("T")[0],
+  readBillIds: ["bill-1", "bill-2"],
+  earnedBadgeIds: ["watchdog", "delegate", "local-hero"],
+  activeFilter: "all",
+};
+
+function civicStreamReducer(
+  state: CivicStreamState,
+  action: CivicStreamAction
+): CivicStreamState {
+  switch (action.type) {
+    case "SET_POSTAL_CODE":
+      return { ...state, postalCode: action.payload };
+
+    case "COMPLETE_ONBOARDING":
+      return {
+        ...state,
+        postalCode: action.payload.postalCode,
+        riding: action.payload.riding,
+        onboardingComplete: true,
+      };
+
+    case "MARK_BILL_READ":
+      if (state.readBillIds.includes(action.payload)) {
+        return state;
+      }
+      return {
+        ...state,
+        readBillIds: [...state.readBillIds, action.payload],
+      };
+
+    case "SET_FILTER":
+      return { ...state, activeFilter: action.payload };
+
+    case "INCREMENT_STREAK":
+      return { ...state, streakDays: state.streakDays + 1 };
+
+    case "RESET_DEMO":
+      return initialState;
+
+    default:
+      return state;
+  }
+}
+
+interface CivicStreamContextType {
+  state: CivicStreamState;
+  dispatch: React.Dispatch<CivicStreamAction>;
+}
+
+const CivicStreamContext = createContext<CivicStreamContextType | undefined>(
+  undefined
+);
+
+export function CivicStreamProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(civicStreamReducer, initialState, (initial) => {
+    // Try to load from localStorage on client
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("civicStreamState");
+      if (saved) {
+        try {
+          return { ...initial, ...JSON.parse(saved) };
+        } catch {
+          return initial;
+        }
+      }
+    }
+    return initial;
+  });
+
+  // Persist to localStorage on state change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("civicStreamState", JSON.stringify(state));
+    }
+  }, [state]);
+
+  return (
+    <CivicStreamContext.Provider value={{ state, dispatch }}>
+      {children}
+    </CivicStreamContext.Provider>
+  );
+}
+
+export function useCivicStream() {
+  const context = useContext(CivicStreamContext);
+  if (context === undefined) {
+    throw new Error("useCivicStream must be used within a CivicStreamProvider");
+  }
+  return context;
+}

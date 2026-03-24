@@ -18,12 +18,7 @@ export default function ProfilePage() {
   const { streakDays, daysUntilNextBadge, progressPercent } = useStreak();
   //const { badges, reps } = useDemoData();
   const { reps } = useDemoData();
-  const earnedBadges = {
-    watchdog: "2025-01-15",
-    delegate: "2025-02-03",
-    "local-hero": "2025-02-20",
-  };
-  const badges = getBadgesForUser(earnedBadges);
+  const badges = getBadgesForUser(state.earnedBadgeIds);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);

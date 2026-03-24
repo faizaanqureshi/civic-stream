@@ -8,25 +8,109 @@ import React, {
   ReactNode,
 } from "react";
 import type { CivicStreamState, CivicStreamAction } from "@/types";
+import { createClient } from "@/lib/supabase/client";
 const now = new Date().toISOString().split("T")[0];
 const initialState: CivicStreamState = {
   postalCode: null,
   riding: null,
   onboardingComplete: false,
-  streakDays: 10,
+  streakDays: 5,
   lastActiveDate: now,
-  readBillIds: ["bill-1", "bill-2"],
-  earnedBadgeIds: ["watchdog", "delegate", "local-hero"],
+  readBillIds: [],
+  earnedBadgeIds: [],
   activeFilter: "all",
-
   activities: [],
+  externalClickUrls: [],
+  points: 0,
+  zoningClickIds: [],
+  lastCelebratedLevel: 1,
 };
+
+const supabase = createClient();
 
 function civicStreamReducer(
   state: CivicStreamState,
   action: CivicStreamAction,
 ): CivicStreamState {
+  // Helper for timestamping
+  const now = new Date().toISOString();
+
   switch (action.type) {
+    case "SYNC_FROM_SUPABASE":
+      // Merge existing state with Supabase data, ensuring arrays aren't undefined
+      return {
+        ...state,
+        ...action.payload,
+        readBillIds: action.payload.readBillIds || [],
+        zoningClickIds: action.payload.zoningClickIds || [],
+        externalClickUrls: action.payload.externalClickUrls || [],
+        earnedBadgeIds: action.payload.earnedBadgeIds || [],
+        activities: (action.payload.activities || []).slice(0, 5),
+      };
+
+    case "MARK_BILL_READ": {
+      if (state.readBillIds.includes(action.payload)) return state;
+
+      const updatedReadBillIds = [...state.readBillIds, action.payload];
+      const pointsEarned = 10;
+
+      const newActivity = {
+        id: `bill-${Date.now()}`,
+        action: `Earned 10pts: Read bill ${action.payload}`,
+        time: now,
+      };
+
+      return {
+        ...state,
+        points: (state.points || 0) + pointsEarned,
+        readBillIds: updatedReadBillIds,
+        activities: [newActivity, ...(state.activities || [])].slice(0, 5),
+      };
+    }
+
+    case "TRACK_ZONING_CLICK": {
+      if (state.zoningClickIds?.includes(action.payload)) return state;
+
+      const updatedZoningIds = [
+        ...(state.zoningClickIds || []),
+        action.payload,
+      ];
+      const pointsEarned = 5;
+
+      const newActivity = {
+        id: `zone-${Date.now()}`,
+        action: `Earned 5pts: Viewed Zoning Alert`,
+        time: now,
+      };
+
+      return {
+        ...state,
+        points: (state.points || 0) + pointsEarned,
+        zoningClickIds: updatedZoningIds,
+        activities: [newActivity, ...(state.activities || [])].slice(0, 5),
+      };
+    }
+
+    case "TRACK_EXTERNAL_CLICK": {
+      if (state.externalClickUrls?.includes(action.payload)) return state;
+
+      const updatedUrls = [...(state.externalClickUrls || []), action.payload];
+      const pointsEarned = 5;
+
+      const newActivity = {
+        id: `ext-${Date.now()}`,
+        action: `Earned 5pts: Explored external source`,
+        time: now,
+      };
+
+      return {
+        ...state,
+        points: (state.points || 0) + pointsEarned,
+        externalClickUrls: updatedUrls,
+        activities: [newActivity, ...(state.activities || [])].slice(0, 5),
+      };
+    }
+
     case "SET_POSTAL_CODE":
       return { ...state, postalCode: action.payload };
 
@@ -38,46 +122,20 @@ function civicStreamReducer(
         onboardingComplete: true,
       };
 
-    case "MARK_BILL_READ":
-      if (state.readBillIds.includes(action.payload)) {
-        return state;
-      }
-    
-      const updatedReadBillIds = [...state.readBillIds, action.payload];
-      const updatedEarnedBadgeIds = [...state.earnedBadgeIds];
-    
-      if (
-        updatedReadBillIds.length >= 10 &&
-        !updatedEarnedBadgeIds.includes("bill-hawk")
-      ) {
-        updatedEarnedBadgeIds.push("bill-hawk");
-      }
-      if (
-        updatedReadBillIds.length >= 50 &&
-        !updatedEarnedBadgeIds.includes("watchdog")
-      ) {
-        updatedEarnedBadgeIds.push("watchdog");
-      }
-      const newActivity = {
-        id: Date.now().toString(),
-        action: `Read bill ${action.payload}`,
-        time: "Just now",
-      };
-      return {
-        ...state,
-        readBillIds: updatedReadBillIds,
-        earnedBadgeIds: updatedEarnedBadgeIds,
-        activities: [newActivity, ...(state.activities || [])]
-      };
-      
     case "SET_FILTER":
       return { ...state, activeFilter: action.payload };
 
     case "INCREMENT_STREAK":
-      return { ...state, streakDays: state.streakDays + 1 };
+      return { ...state, streakDays: (state.streakDays || 0) + 1 };
 
     case "RESET_DEMO":
       return initialState;
+
+    case "ACKNOWLEDGE_LEVEL_UP":
+      return {
+        ...state,
+        lastCelebratedLevel: action.payload,
+      };
 
     default:
       return state;

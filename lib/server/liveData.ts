@@ -68,9 +68,12 @@ export async function getFederalBills(): Promise<FeedItem[]> {
     // Fetch detail for each bill in parallel to get status, chamber, sponsor, etc.
     // C-1 is excluded as it's a pro forma procedural bill introduced every session
     const details = await Promise.all(
-      data.objects.filter((bill: any) => bill.number !== "C-1").slice(0, 5).map((bill: any) =>
-        fetchJson<any>(`${baseUrl}${bill.url}?format=json`).catch(() => null)
-      )
+      data.objects
+        .filter((bill: any) => bill.number !== "C-1")
+        .slice(0, 5)
+        .map((bill: any) =>
+          fetchJson<any>(`${baseUrl}${bill.url}?format=json`).catch(() => null),
+        ),
     );
 
     return details
@@ -140,21 +143,29 @@ function buildProvincialSummary(html: string): string {
 
 export async function getProvincialBills(): Promise<FeedItem[]> {
   try {
-    const listingUrl = "https://www.ola.org/en/legislative-business/bills/current";
+    const listingUrl =
+      "https://www.ola.org/en/legislative-business/bills/current";
     const html = await fetchText(listingUrl);
     const baseUrl = "https://www.ola.org";
 
-    type BillStub = { billId: string; title: string; isoDate: string; billUrl: string };
+    type BillStub = {
+      billId: string;
+      title: string;
+      isoDate: string;
+      billUrl: string;
+    };
     const stubs: BillStub[] = [];
 
     // PATTERN 1 — table layout
     const tableRegex =
       /views-field-field-bill-number[^>]*>[\s\S]*?Bill\s*(\d+)[\s\S]*?views-field-field-bill-title[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?datetime="([^"]+)"/gi;
     let match;
-    while ((match = tableRegex.exec(html)) !== null && stubs.length < 6) {
+    while ((match = tableRegex.exec(html)) !== null && stubs.length < 10) {
       stubs.push({
         billId: match[1],
-        billUrl: match[2].startsWith("http") ? match[2] : `${baseUrl}${match[2]}`,
+        billUrl: match[2].startsWith("http")
+          ? match[2]
+          : `${baseUrl}${match[2]}`,
         title: stripHtml(match[3]).trim(),
         isoDate: match[4],
       });
@@ -164,11 +175,13 @@ export async function getProvincialBills(): Promise<FeedItem[]> {
     if (stubs.length === 0) {
       const listRegex =
         /<a[^>]*href="([^"]+)"[^>]*>Bill\s+(\d+),\s+([^<,]+),\s+(\d{4})<\/a>/gi;
-      while ((match = listRegex.exec(html)) !== null && stubs.length < 6) {
+      while ((match = listRegex.exec(html)) !== null && stubs.length < 10) {
         const billYear = match[4];
         stubs.push({
           billId: match[2],
-          billUrl: match[1].startsWith("http") ? match[1] : `${baseUrl}${match[1]}`,
+          billUrl: match[1].startsWith("http")
+            ? match[1]
+            : `${baseUrl}${match[1]}`,
           title: match[3].trim(),
           isoDate: new Date(`${billYear}-01-01`).toISOString(),
         });

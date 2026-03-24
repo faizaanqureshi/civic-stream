@@ -1,7 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Mail, LogOut, User, MapPin, ChevronRight } from "lucide-react";
+import {
+  Bell,
+  Mail,
+  LogOut,
+  User,
+  MapPin,
+  ChevronRight,
+  Trophy,
+  FileText,
+  Map,
+} from "lucide-react";
 import { BadgeGrid } from "@/components/gamification/BadgeGrid";
 import { ActivityFeed } from "@/components/gamification/ActivityFeed";
 import { useCivicStream } from "@/context/CivicStreamContext";
@@ -16,42 +26,79 @@ export default function ProfilePage() {
   const supabase = createClient();
   const { state, dispatch } = useCivicStream();
   const { streakDays, daysUntilNextBadge, progressPercent } = useStreak();
-  //const { badges, reps } = useDemoData();
   const { reps } = useDemoData();
   const badges = getBadgesForUser(state.earnedBadgeIds);
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch profile and recent 5 activities
+      const [profileRes, activityRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase
+          .from("activities")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      if (profileRes.data) {
+        dispatch({
+          type: "SYNC_FROM_SUPABASE",
+          payload: {
+            ...profileRes.data,
+            activities: activityRes.data?.map((a: any) => ({
+              id: a.id,
+              action: a.action,
+              time: a.created_at,
+            })),
+          },
+        });
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   const { data: repsData } = useRiding(state.postalCode);
+
   const handleLogout = async () => {
     if (confirm("Are you sure you want to log out?")) {
-      // 1. Sign out from Supabase (clears cookies/localstorage)
       await supabase.auth.signOut();
-
-      // 2. Clear local app state
       dispatch({ type: "RESET_DEMO" });
-
-      // 3. Send back to onboarding
       router.push("/onboarding");
     }
   };
-  const handleChangePostalCode = () => {
-    // 1. Reset the local context state so the onboarding knows we are editing
-    dispatch({ type: "RESET_DEMO" });
 
-    // 2. Send them to onboarding
+  const handleChangePostalCode = () => {
+    dispatch({ type: "RESET_DEMO" });
     router.push("/onboarding?edit=true");
   };
+
   if (!mounted) {
     return <div className="min-h-screen bg-gray-50" />;
   }
-  const handleResetDemo = () => {
-    if (confirm("Reset demo and return to onboarding?")) {
-      dispatch({ type: "RESET_DEMO" });
-      router.push("/onboarding");
-    }
-  };
+
+  // Calculate current level based on points
+  const points = state.points || 0;
+  let currentLevel = 1;
+  if (points >= 500) currentLevel = 4;
+  else if (points >= 250) currentLevel = 3;
+  else if (points >= 100) currentLevel = 2;
+
+  // Safely get counts (in case older users have missing arrays in localStorage)
+  const billsReadCount = state.readBillIds?.length || 0;
+  const zoningViewCount = state.zoningClickIds?.length || 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -75,11 +122,15 @@ export default function ProfilePage() {
                 <h2 className="text-base font-bold text-gray-900">
                   Day Civic Streak
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">Keep it up!</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    {points} Points
+                  </span>
+                  <p className="text-xs text-gray-500">Keep it up!</p>
+                </div>
               </div>
             </div>
 
-            {/* Progress to Next Badge */}
             <div className="pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-gray-500">
@@ -98,6 +149,53 @@ export default function ProfilePage() {
               <p className="text-xs text-gray-400 mt-2">
                 {daysUntilNextBadge} days to go
               </p>
+            </div>
+          </div>
+
+          {/* Civic Impact Stats */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">
+              Civic Impact
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              {/* Level Stat */}
+              <div className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-2">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <p className="text-xl font-bold text-gray-900 leading-none">
+                  {currentLevel}
+                </p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">
+                  Level
+                </p>
+              </div>
+
+              {/* Bills Stat */}
+              <div className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <p className="text-xl font-bold text-gray-900 leading-none">
+                  {billsReadCount}
+                </p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">
+                  Bills Read
+                </p>
+              </div>
+
+              {/* Zoning Stat */}
+              <div className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-2">
+                  <Map className="w-4 h-4" />
+                </div>
+                <p className="text-xl font-bold text-gray-900 leading-none">
+                  {zoningViewCount}
+                </p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">
+                  Zoning
+                </p>
+              </div>
             </div>
           </div>
 
@@ -195,6 +293,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Location */}
           <div>
             <h2 className="text-sm font-semibold text-gray-900 mb-3">
               Your Location
@@ -219,6 +319,7 @@ export default function ProfilePage() {
               </div>
             </button>
           </div>
+
           {/* Demo Reset */}
           <div className="pt-4">
             <button

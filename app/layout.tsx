@@ -7,6 +7,7 @@ import { CivicStreamProvider } from "@/context/CivicStreamContext";
 import { TopBar } from "@/components/nav/TopBar";
 import { BottomNav } from "@/components/nav/BottomNav";
 import { usePathname } from "next/navigation";
+import { LevelUpOverlay } from "@/components/levelup/LevelUpModal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -55,8 +56,7 @@ export default function RootLayout({
                   ? "pt-[60px] pb-24 min-h-screen"
                   : "pb-24 min-h-screen"
                 : "min-h-screen"
-            }
-          >
+            }>
             {children}
           </main>
           {showBottomNav && <BottomNav />}
@@ -67,6 +67,7 @@ export default function RootLayout({
               DEMO
             </div>
           )}
+          <LevelUpOverlay />
         </CivicStreamProvider>
       </body>
     </html>

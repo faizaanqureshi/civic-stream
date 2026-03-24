@@ -331,35 +331,34 @@ async function getMiltonZoning(): Promise<ZoningAlert[]> {
  */
 async function getMiltonFeed(): Promise<FeedItem[]> {
   try {
-    const url = "https://calendar.milton.ca/meetings";
-    const html = await fetchText(url);
+    const baseUrl = "https://calendar.milton.ca";
+    const html = await fetchText(`${baseUrl}/meetings`);
 
-    // Milton URL format: /meetings/Detail/YYYY-MM-DD-HHmm
+    // Capture full slug: YYYY-MM-DD-HHMM-Meeting-Name-Slug
     const meetingMatches = [
-      ...html.matchAll(/\/meetings\/Detail\/([\d-]{10}-[\d]{4})/g),
+      ...html.matchAll(/\/meetings\/Detail\/((\d{4}-\d{2}-\d{2})-(\d{4})-([A-Za-z][A-Za-z0-9-]*))/g),
     ].slice(0, 5);
 
     return meetingMatches.map((m, i) => {
-      const rawDateStr = m[1]; // e.g., "2026-03-24-1900"
+      const fullSlug = m[1];   // e.g. "2026-03-16-1900-Council-Meeting"
+      const datePart = m[2];   // e.g. "2026-03-16"
+      const timePart = m[3];   // e.g. "1900"
+      const nameSlug = m[4];   // e.g. "Council-Meeting"
 
-      // Convert "2026-03-24-1900" to a format JS understands: "2026-03-24T19:00:00"
-      // We split by the last dash to separate the date from the time
-      const datePart = rawDateStr.slice(0, 10);
-      const timePart = rawDateStr.slice(11);
+      const title = nameSlug.replace(/-/g, " ");
       const formattedIso = `${datePart}T${timePart.slice(0, 2)}:${timePart.slice(2)}:00`;
-
-      // If the meeting is in the future, it's an "Upcoming" meeting
-      // If it's in the past, it's a "Past" meeting
       const meetingDate = new Date(formattedIso);
       const isUpcoming = meetingDate > new Date();
+      const timeDisplay = `${timePart.slice(0, 2)}:${timePart.slice(2)}`;
 
       return {
-        id: `milton-mtg-${rawDateStr}-${i}`,
+        id: `milton-mtg-${fullSlug}-${i}`,
         level: "Municipal",
         type: "meeting",
-        title: "Milton Council / Committee Meeting",
-        summary: `${isUpcoming ? "Upcoming" : "Recent"} public meeting scheduled for ${datePart} at ${timePart.slice(0, 2)}:${timePart.slice(2)}. Click to view agenda and participation details.`,
+        title: `Milton: ${title}`,
+        summary: `${isUpcoming ? "Upcoming" : "Recent"} ${title.toLowerCase()} on ${datePart} at ${timeDisplay}. Town Hall, 150 Mary Street, Milton.`,
         date: meetingDate.toISOString(),
+        url: `${baseUrl}/meetings/Detail/${fullSlug}`,
         isNew: isUpcoming,
         urgency: isUpcoming ? "high" : "low",
         linkedBillId: null,
@@ -374,36 +373,34 @@ async function getMiltonFeed(): Promise<FeedItem[]> {
 
 async function getWaterlooFeed(): Promise<FeedItem[]> {
   try {
-    // The events portal URL for Waterloo
-    const url = "https://events.waterloo.ca/meetings/";
-    const html = await fetchText(url);
+    const baseUrl = "https://events.waterloo.ca";
+    const html = await fetchText(`${baseUrl}/meetings/`);
 
-    // Pattern: /meetings/Detail/2026-03-24-1830-Council-Meeting
-    // Group 1: The Date String (YYYY-MM-DD-HHmm)
-    // Group 2: The Slug (Meeting-Name)
+    // Capture full slug: YYYY-MM-DD-HHMM-Meeting-Name-Slug
     const meetingMatches = [
-      ...html.matchAll(/\/meetings\/Detail\/([\d-]{15})-([a-zA-Z-]+)/g),
+      ...html.matchAll(/\/meetings\/Detail\/((\d{4}-\d{2}-\d{2})-(\d{4})-([A-Za-z][A-Za-z0-9-]*))/g),
     ].slice(0, 6);
 
     return meetingMatches.map((m, i) => {
-      const rawDateStr = m[1]; // e.g., "2026-03-24-1830"
-      const slug = m[2].replace(/-/g, " "); // e.g., "Council Meeting"
+      const fullSlug = m[1];   // e.g. "2026-03-30-1400-Council-Meeting"
+      const datePart = m[2];   // e.g. "2026-03-30"
+      const timePart = m[3];   // e.g. "1400"
+      const nameSlug = m[4];   // e.g. "Council-Meeting"
 
-      // Parse "2026-03-24-1830" -> "2026-03-24T18:30:00"
-      const datePart = rawDateStr.slice(0, 10);
-      const timePart = rawDateStr.slice(11);
+      const title = nameSlug.replace(/-/g, " ");
       const formattedIso = `${datePart}T${timePart.slice(0, 2)}:${timePart.slice(2)}:00`;
-
       const meetingDate = new Date(formattedIso);
       const isUpcoming = meetingDate > new Date();
+      const timeDisplay = `${timePart.slice(0, 2)}:${timePart.slice(2)}`;
 
       return {
-        id: `waterloo-mtg-${rawDateStr}-${i}`,
+        id: `waterloo-mtg-${fullSlug}-${i}`,
         level: "Municipal",
         type: "meeting",
-        title: `Waterloo: ${slug}`,
-        summary: `${isUpcoming ? "Upcoming" : "Recent"} ${slug} scheduled for ${datePart} at ${timePart.slice(0, 2)}:${timePart.slice(2)}.`,
+        title: `Waterloo: ${title}`,
+        summary: `${isUpcoming ? "Upcoming" : "Recent"} ${title.toLowerCase()} on ${datePart} at ${timeDisplay}. 100 Regina Street South, Council Chambers.`,
         date: meetingDate.toISOString(),
+        url: `${baseUrl}/meetings/Detail/${fullSlug}`,
         isNew: isUpcoming,
         urgency: isUpcoming ? "high" : "medium",
         linkedBillId: null,

@@ -7,9 +7,12 @@ import { StreakBanner } from "@/components/gamification/StreakBanner";
 import { useCivicStream } from "@/context/CivicStreamContext";
 import { useMunicipalFeed } from "@/lib/hooks/useMunicipalFeed";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function FeedPage() {
   const { state } = useCivicStream();
+  const { user, loading: authLoading } = useAuth();
   const { data, loading, error } = useMunicipalFeed(state.postalCode);
   const feedData = data?.feed ?? [];
 
@@ -17,6 +20,20 @@ export default function FeedPage() {
     state.activeFilter === "all"
       ? feedData
       : feedData.filter((item) => item.level === state.activeFilter);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (authLoading || !mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0F9B7A]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

@@ -32,6 +32,7 @@ export default function OnboardingPage() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // Postal States
   const [postalCode, setPostalCode] = useState("");
@@ -56,18 +57,27 @@ export default function OnboardingPage() {
     setIsAuthenticating(true);
 
     try {
-      const { error } = isSignUp
-        ? await supabase.auth.signUp({ email, password })
+      const { data, error } = isSignUp
+        ? await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              // This ensures metadata is attached even if confirmation was on
+              data: { display_name: email.split("@")[0] },
+            },
+          })
         : await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         setAuthError(error.message);
-      } else if (!isSignUp) {
+        return;
+      }
+
+      // If we have a session (which we will with "Confirm Email" OFF)
+      if (data.session) {
         setStep("postal");
-      } else {
-        // Optional: If sign up requires email confirmation, handle that here.
-        // Otherwise, proceed to postal step.
-        setStep("postal");
+        // Prefetch the feed so it loads instantly when they finish
+        router.prefetch("/feed");
       }
     } catch (err) {
       setAuthError("An unexpected error occurred.");
@@ -81,16 +91,35 @@ export default function OnboardingPage() {
   };
 
   const handleStartFeed = async () => {
-    if (ridingData && user) {
-      // 1. Save location data to Supabase user metadata
-      await supabase.auth.updateUser({
+    if (!ridingData) return;
+
+    setIsCompleting(true);
+    try {
+      // 1. Get the current user directly from the source to avoid hook lag
+      const {
+        data: { user: currentUser },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !currentUser) {
+        setAuthError(
+          "Authentication session not found. Please try logging in again.",
+        );
+        setStep("auth");
+        return;
+      }
+
+      // 2. Save location data to Supabase user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
         data: {
           postal_code: ridingData.postal,
           riding: ridingData.riding,
         },
       });
 
-      // 2. Update local context
+      if (updateError) throw updateError;
+
+      // 3. Update local context
       dispatch({
         type: "COMPLETE_ONBOARDING",
         payload: {
@@ -99,8 +128,15 @@ export default function OnboardingPage() {
         },
       });
 
-      // 3. Navigate to main app
+      // 4. Force navigation to the feed
+      // We use window.location.href or router.refresh() if push feels "stuck"
       router.push("/feed");
+    } catch (err: any) {
+      setAuthError(
+        err.message || "Failed to save your location. Please try again.",
+      );
+    } finally {
+      setIsCompleting(false);
     }
   };
 

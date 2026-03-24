@@ -1,5 +1,5 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Mail, Trash2, User } from "lucide-react";
 import { BadgeGrid } from "@/components/gamification/BadgeGrid";
@@ -13,9 +13,16 @@ export default function ProfilePage() {
   const router = useRouter();
   const { state, dispatch } = useCivicStream();
   const { streakDays, daysUntilNextBadge, progressPercent } = useStreak();
-  const { badges } = useDemoData();
+  const { badges, reps } = useDemoData();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const { data: repsData } = useRiding(state.postalCode);
 
+  if (!mounted) {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
   const handleResetDemo = () => {
     if (confirm("Reset demo and return to onboarding?")) {
       dispatch({ type: "RESET_DEMO" });
@@ -96,8 +103,7 @@ export default function ProfilePage() {
               {(repsData?.reps ?? []).slice(0, 3).map((rep) => (
                 <div
                   key={rep.id}
-                  className="bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-3"
-                >
+                  className="bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-3">
                   {rep.photo ? (
                     <img
                       src={rep.photo}
@@ -110,14 +116,15 @@ export default function ProfilePage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm truncate">{rep.name}</p>
+                    <p className="font-medium text-gray-900 text-sm truncate">
+                      {rep.name}
+                    </p>
                     <p className="text-xs text-gray-500 mt-0.5">{rep.title}</p>
                   </div>
                   {rep.email && (
                     <a
                       href={`mailto:${rep.email}`}
-                      className="px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors flex-shrink-0"
-                    >
+                      className="px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors flex-shrink-0">
                       Email
                     </a>
                   )}
@@ -169,8 +176,7 @@ export default function ProfilePage() {
           {/* Demo Reset */}
           <button
             onClick={handleResetDemo}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-100"
-          >
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-100">
             <Trash2 className="w-4 h-4" />
             Reset Demo
           </button>

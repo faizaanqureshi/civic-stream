@@ -125,6 +125,8 @@ export interface LiveBillDetail {
   shortTitle: string | null;
   level: JurisdictionLevel;
   status: string;
+  statusStage: number;
+  totalStages: number;
   chamber: string | null;
   isPrivateMember: boolean;
   isLaw: boolean;
@@ -135,6 +137,11 @@ export interface LiveBillDetail {
   fullTextUrl: string | null;
   votes: BillVote[];
   rawText: string | null;
+  gist: string | null;
+  aiSummary: string | null;
+  keyPoints: string[];
+  forArguments: string[];
+  againstArguments: string[];
 }
 
 export interface ZoningAlert {

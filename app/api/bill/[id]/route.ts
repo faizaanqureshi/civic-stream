@@ -5,6 +5,24 @@ import type { LiveBillDetail, BillVote } from "@/types";
 const FEDERAL_SESSION = "45-1";
 const OPENPARL = "https://openparliament.ca";
 
+// Map OpenParliament status_code to a stage number (1–6)
+function statusCodeToStage(statusCode: string): { stage: number; total: number } {
+  const map: Record<string, number> = {
+    HouseFirstReading: 1,
+    HouseSecondReading: 2,
+    HouseCommittee: 3,
+    HouseReportStage: 3,
+    HouseThirdReading: 4,
+    SenateFirstReading: 5,
+    SenateSecondReading: 5,
+    SenateCommittee: 5,
+    SenateThirdReading: 5,
+    RoyalAssentGiven: 6,
+  };
+  return { stage: map[statusCode] ?? 1, total: 6 };
+}
+
+
 async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | null> {
   try {
     const [detail, votesData] = await Promise.all([
@@ -14,20 +32,17 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
       ).catch(() => ({ objects: [] })),
     ]);
 
-    // Resolve sponsor name by following their member URL
+    // Resolve sponsor name
     let sponsorName: string | null = null;
     let sponsorUrl: string | null = null;
-    if (detail.sponsor_url) {
+    const rawSponsorUrl = detail.sponsor_politician_url || detail.sponsor_url;
+    if (rawSponsorUrl) {
       const sponsorDetail = await fetchJson<any>(
-        `${OPENPARL}${detail.sponsor_url}?format=json`
+        `${OPENPARL}${rawSponsorUrl}?format=json`
       ).catch(() => null);
       sponsorName = sponsorDetail?.name || null;
-      sponsorUrl = `${OPENPARL}${detail.sponsor_url}`;
+      sponsorUrl = `${OPENPARL}${rawSponsorUrl}`;
     }
-
-    console.log(`\n=== OpenParliament bill detail for ${billNumber} ===`);
-    console.log(JSON.stringify(detail, null, 2));
-    console.log("=== end ===\n");
 
     const votes: BillVote[] = (votesData?.objects || [])
       .slice(0, 8)
@@ -42,9 +57,9 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
     const fullTextUrl = detail.legisinfo_url ?? `https://www.parl.ca/legisinfo/en/bill/${FEDERAL_SESSION}/${billNumber.toLowerCase()}`;
     const documentViewerUrl: string | null = detail.text_url ?? null;
 
+    // Get bill text — document viewer first, fall back to debates
     let rawText: string | null = null;
 
-    // Strategy 1: fetch the actual bill document from Parliament's DocumentViewer
     if (documentViewerUrl) {
       try {
         const docHtml = await fetchText(documentViewerUrl);
@@ -52,22 +67,17 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
         let content = mainMatch ? mainMatch[1] : docHtml;
         content = content.replace(/<(script|style|nav|header|footer|aside)[^>]*>[\s\S]*?<\/\1>/gi, "");
         const plain = stripHtml(content).replace(/\s{3,}/g, "\n\n").trim();
-        if (plain.length > 200) rawText = plain.slice(0, 8000);
-        console.log(`\n=== DocumentViewer text for ${billNumber} (${plain.length} chars) ===`);
-        console.log(plain.slice(0, 2000));
-        console.log("=== end ===\n");
-      } catch (err) {
-        console.error(`DocumentViewer fetch failed for ${billNumber}:`, err);
+        if (plain.length > 200) rawText = plain;
+      } catch {
+        // fall through to debates
       }
     }
 
-    // Strategy 2: fall back to debates from OpenParliament
     if (!rawText) {
       try {
         const debatesData = await fetchJson<any>(
           `${OPENPARL}/bills/${FEDERAL_SESSION}/${billNumber}/debates/?format=json`
         ).catch(() => null);
-
         const speeches: string[] = (debatesData?.objects || [])
           .slice(0, 12)
           .map((s: any) => {
@@ -76,25 +86,23 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
             return text ? `[${who}]: ${text}` : null;
           })
           .filter(Boolean);
-
-        if (speeches.length > 0) {
-          rawText = speeches.join("\n\n").slice(0, 8000);
-        }
-
-        console.log(`\n=== Debates fallback for ${billNumber} (${rawText?.length ?? 0} chars) ===`);
-        console.log(rawText?.slice(0, 2000));
-        console.log("=== end ===\n");
-      } catch (err) {
-        console.error(`Debates fetch failed for ${billNumber}:`, err);
+        if (speeches.length > 0) rawText = speeches.join("\n\n");
+      } catch {
+        // no text available
       }
     }
 
+    const { stage, total } = statusCodeToStage(detail.status_code ?? "");
+    const title = detail.name?.en ?? "Legislative Measure";
+
     return {
       billNumber: detail.number ?? billNumber,
-      title: detail.name?.en ?? "Legislative Measure",
+      title,
       shortTitle: detail.short_title?.en ?? null,
       level: "Federal",
       status: detail.status?.en ?? "Under Consideration",
+      statusStage: stage,
+      totalStages: total,
       chamber: detail.home_chamber?.toLowerCase().includes("house") ? "House of Commons" : "Senate",
       isPrivateMember: detail.private_member_bill === true,
       isLaw: detail.law === true,
@@ -105,6 +113,11 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
       fullTextUrl: documentViewerUrl ?? fullTextUrl,
       votes,
       rawText,
+      gist: null,
+      aiSummary: null,
+      keyPoints: [],
+      forArguments: [],
+      againstArguments: [],
     };
   } catch (err) {
     console.error("fetchFederalBill error:", err);
@@ -123,29 +136,31 @@ async function fetchProvincialBill(
   try {
     const html = await fetchText(url);
 
-    // Title — usually in <h1>
     const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-    const title = titleMatch
-      ? stripHtml(titleMatch[1]).trim()
-      : `Bill ${billNumber}`;
+    const title = titleMatch ? stripHtml(titleMatch[1]).trim() : `Bill ${billNumber}`;
 
-    // Sponsor / MPP
     const sponsorMatch =
       html.match(/(?:Sponsor|Introduced by|MPP)[^<]*<\/[^>]+>\s*(?:<[^>]+>)?\s*([A-Z][^<\n]{3,60})/i) ||
       html.match(/member[^<]*<\/[^>]+>\s*(?:<[^>]+>)?\s*([A-Z][a-z]+ [A-Z][a-z]+)/i);
     const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
 
-    // Status / current reading
     const statusMatch = html.match(
       /(?:Royal Assent|Third Reading|Second Reading|First Reading|Committee|Passed|Withdrawn)[^<\n]*/i
     );
     const status = statusMatch ? statusMatch[0].trim().slice(0, 60) : "Active";
 
-    // Try to extract a brief description
     const summaryMatch = html.match(
       /(?:summary|description|purpose)[^<]*<\/[^>]+>\s*<[^>]+>([\s\S]{80,1000}?)<\/[^>]+>/i
     );
-    const rawText = summaryMatch ? stripHtml(summaryMatch[1]).trim().slice(0, 1200) : null;
+    const rawText = summaryMatch ? stripHtml(summaryMatch[1]).trim().slice(0, 4000) : null;
+
+    const isLaw = status.toLowerCase().includes("royal assent");
+    const stageMap: Record<string, number> = {
+      "first reading": 1, "second reading": 2, "committee": 3,
+      "third reading": 4, "royal assent": 5,
+    };
+    const stageKey = Object.keys(stageMap).find((k) => status.toLowerCase().includes(k));
+    const stage = stageKey ? stageMap[stageKey] : 1;
 
     return {
       billNumber,
@@ -153,9 +168,11 @@ async function fetchProvincialBill(
       shortTitle: null,
       level: "Provincial",
       status,
+      statusStage: stage,
+      totalStages: 5,
       chamber: "Ontario Legislative Assembly",
       isPrivateMember: false,
-      isLaw: status.toLowerCase().includes("royal assent"),
+      isLaw,
       introducedDate: "",
       sponsor,
       sponsorUrl: null,
@@ -163,6 +180,11 @@ async function fetchProvincialBill(
       fullTextUrl: url,
       votes: [],
       rawText,
+      gist: null,
+      aiSummary: null,
+      keyPoints: [],
+      forArguments: [],
+      againstArguments: [],
     };
   } catch (err) {
     console.error("fetchProvincialBill error:", err);

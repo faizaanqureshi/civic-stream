@@ -13,10 +13,7 @@ import {
   User,
   Calendar,
   Building2,
-  FileText,
   Sparkles,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { BillProgress } from "@/components/bill/BillProgress";
 import { BillSummary } from "@/components/bill/BillSummary";
@@ -38,7 +35,8 @@ export default function BillDetailPage() {
   const [liveBill, setLiveBill] = useState<LiveBillDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
-  const [textExpanded, setTextExpanded] = useState(true);
+  const [aiSummary, setAiSummary] = useState<Pick<LiveBillDetail, "gist" | "aiSummary" | "keyPoints" | "forArguments" | "againstArguments"> | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const fixtureBill = bills.find((b) => b.id === billId);
 
@@ -55,9 +53,19 @@ export default function BillDetailPage() {
     const sourceUrl = searchParams.get("sourceUrl");
     const query = new URLSearchParams({ level, ...(sourceUrl ? { sourceUrl } : {}) });
 
+    // Fetch metadata (fast)
     fetch(`/api/bill/${encodeURIComponent(billId)}?${query}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((data: LiveBillDetail) => setLiveBill(data))
+      .then((data: LiveBillDetail) => {
+        setLiveBill(data);
+        // Fetch AI summary separately (slow) once metadata is in
+        setAiLoading(true);
+        fetch(`/api/bill/${encodeURIComponent(billId)}/summary?${query}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .then((ai) => setAiSummary(ai))
+          .catch(() => {}) // AI failure is non-critical
+          .finally(() => setAiLoading(false));
+      })
       .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
   }, [billId, fixtureBill, dispatch, searchParams]);
@@ -343,12 +351,12 @@ export default function BillDetailPage() {
 
           {/* Votes */}
           {bill.votes.length > 0 && (
-            <div className="bg-gray-50 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Gavel className="w-4 h-4 text-gray-500" />
-                Recorded Votes
-              </h3>
-              <div className="space-y-3">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Gavel className="w-4 h-4 text-gray-400" />
+                <h3 className="text-sm font-semibold text-gray-900 tracking-tight">Recorded Votes</h3>
+              </div>
+              <div className="space-y-2">
                 {bill.votes.map((vote, idx) => {
                   const total = vote.yeas + vote.nays;
                   const yeaPct = total > 0 ? (vote.yeas / total) * 100 : 50;
@@ -356,27 +364,36 @@ export default function BillDetailPage() {
                     vote.result.toLowerCase().includes("agreed") ||
                     vote.yeas > vote.nays;
                   return (
-                    <div key={idx} className="bg-white rounded-lg p-3 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-medium text-gray-800 leading-snug flex-1">
+                    <div key={idx} className="rounded-2xl border border-gray-100 overflow-hidden">
+                      {/* Top row */}
+                      <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
+                        <p className="text-xs font-medium text-gray-700 leading-snug flex-1">
                           {vote.description}
                         </p>
-                        <span className={`flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          passed ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                        <span className={`flex-shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                          passed
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-rose-50 text-rose-700"
                         }`}>
                           {passed ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                           {vote.result}
                         </span>
                       </div>
-                      {/* Vote bar */}
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="text-green-600 font-medium w-12">✓ {vote.yeas}</span>
-                        <div className="flex-1 h-1.5 bg-red-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500 rounded-full" style={{ width: `${yeaPct}%` }} />
-                        </div>
-                        <span className="text-red-600 font-medium w-12 text-right">✗ {vote.nays}</span>
+
+                      {/* Bar */}
+                      <div className="h-1 w-full bg-rose-100">
+                        <div
+                          className="h-full bg-emerald-500 transition-all duration-500"
+                          style={{ width: `${yeaPct}%` }}
+                        />
                       </div>
-                      <p className="text-xs text-gray-400">{vote.date}</p>
+
+                      {/* Bottom row */}
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                        <span className="text-xs font-semibold text-emerald-600">{vote.yeas} Yea</span>
+                        <span className="text-[11px] text-gray-400">{vote.date}</span>
+                        <span className="text-xs font-semibold text-rose-500">{vote.nays} Nay</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -384,37 +401,146 @@ export default function BillDetailPage() {
             </div>
           )}
 
-          {/* AI Summary placeholder — ready for Anthropic SDK */}
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-100">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-500" />
-              AI Summary
-            </h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              AI-powered plain-language summary coming soon. Full bill text has been retrieved and is ready for analysis.
-            </p>
-          </div>
-
-          {/* Full bill text (collapsible) */}
-          {bill.rawText && (
+          {/* Legislative Progress */}
+          {bill.statusStage > 0 && (
             <div className="bg-gray-50 rounded-xl p-5">
-              <button
-                onClick={() => setTextExpanded((v) => !v)}
-                className="w-full flex items-center justify-between text-sm font-semibold text-gray-900"
-              >
-                <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-500" />
-                  Bill Description
-                </span>
-                {textExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-              </button>
-              {textExpanded && (
-                <p className="mt-3 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-                  {bill.rawText}
-                </p>
-              )}
+              <h3 className="text-sm font-semibold text-gray-900 mb-5">Legislative Progress</h3>
+              <div className="space-y-3">
+                {Array.from({ length: bill.totalStages }, (_, i) => {
+                  const stages6 = ["First Reading","Second Reading","Committee","Third Reading","Senate","Royal Assent"];
+                  const stages5 = ["First Reading","Second Reading","Committee","Third Reading","Royal Assent"];
+                  const stageLabels = bill.totalStages === 6 ? stages6 : stages5;
+                  const stageNum = i + 1;
+                  const isCompleted = stageNum < bill.statusStage;
+                  const isCurrent = stageNum === bill.statusStage;
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isCurrent ? "bg-gray-900 text-white ring-4 ring-gray-200"
+                        : isCompleted ? "bg-gray-900 text-white"
+                        : "bg-white border-2 border-gray-200 text-gray-400"
+                      }`}>
+                        {isCompleted
+                          ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                          : <span className="text-xs font-bold">{stageNum}</span>}
+                      </div>
+                      <p className={`text-sm font-medium flex-1 ${isCurrent ? "text-gray-900" : isCompleted ? "text-gray-600" : "text-gray-400"}`}>
+                        {stageLabels[i]}
+                      </p>
+                      {isCurrent && <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-semibold rounded-full">Current</span>}
+                      {isCompleted && <span className="text-xs text-gray-400">✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
+
+          {/* AI Plain Language Summary */}
+          {aiLoading ? (
+            <div className="space-y-4 animate-pulse">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-200 rounded" />
+                <div className="h-4 w-40 bg-gray-200 rounded" />
+              </div>
+              <div className="h-16 bg-blue-50 rounded-r-xl" />
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-gray-100 rounded" />
+                <div className="h-4 w-5/6 bg-gray-100 rounded" />
+                <div className="h-4 w-4/6 bg-gray-100 rounded" />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-5 space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded" style={{ width: `${85 - i * 8}%` }} />
+                ))}
+              </div>
+            </div>
+          ) : aiSummary?.gist ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-gray-400" />
+                <h3 className="text-sm font-semibold text-gray-900">Plain Language Summary</h3>
+              </div>
+              <div className="bg-blue-50 border-l-4 border-blue-200 p-4 rounded-r-xl">
+                <p className="text-sm text-gray-900 font-medium leading-relaxed">{aiSummary.gist}</p>
+              </div>
+              {aiSummary.aiSummary && (
+                <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-3">
+                  {aiSummary.aiSummary.split("\n\n").map((para, idx) => (
+                    <p key={idx} className="text-sm text-gray-700 leading-relaxed">{para}</p>
+                  ))}
+                </div>
+              )}
+              {aiSummary.keyPoints.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-5">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Key Points</h4>
+                  <ul className="space-y-2.5">
+                    {aiSummary.keyPoints.map((point, idx) => (
+                      <li key={idx} className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span className="text-sm text-gray-700 leading-relaxed">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p className="text-xs text-gray-400 text-center">Summary generated by AI • Always verify with source documents</p>
+            </div>
+          ) : null}
+
+          {/* For vs Against */}
+          {aiLoading ? (
+            <div className="space-y-3 animate-pulse">
+              <div className="h-4 w-16 bg-gray-200 rounded" />
+              <div className="h-40 bg-green-50 rounded-xl" />
+              <div className="h-40 bg-red-50 rounded-xl" />
+            </div>
+          ) : (aiSummary?.forArguments.length || aiSummary?.againstArguments.length) ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900">Debate</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {(aiSummary.forArguments.length > 0) && (
+                  <div className="bg-green-50 border border-green-100 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm">Arguments For</h4>
+                    </div>
+                    <ul className="space-y-3">
+                      {aiSummary.forArguments.map((arg, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-green-600 font-bold text-sm mt-0.5">•</span>
+                          <span className="text-sm text-gray-700 leading-relaxed">{arg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {(aiSummary.againstArguments.length > 0) && (
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4"/></svg>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm">Arguments Against</h4>
+                    </div>
+                    <ul className="space-y-3">
+                      {aiSummary.againstArguments.map((arg, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-red-600 font-bold text-sm mt-0.5">•</span>
+                          <span className="text-sm text-gray-700 leading-relaxed">{arg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
 
           {/* Source links */}
           <div className="bg-gray-50 rounded-xl p-5">

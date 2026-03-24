@@ -18,6 +18,8 @@ const initialState: CivicStreamState = {
   readBillIds: ["bill-1", "bill-2"],
   earnedBadgeIds: ["watchdog", "delegate", "local-hero"],
   activeFilter: "all",
+
+  activities: [],
 };
 
 function civicStreamReducer(

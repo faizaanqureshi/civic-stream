@@ -1,4 +1,6 @@
 import { Check, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { useCivicStream } from "@/context/CivicStreamContext";
 import type { Bill } from "@/types";
 
 interface BillSummaryProps {
@@ -6,6 +8,12 @@ interface BillSummaryProps {
 }
 
 export function BillSummary({ bill }: BillSummaryProps) {
+  const { state, dispatch } = useCivicStream();
+  useEffect(() => {
+    if (!state.readBillIds.includes(bill.id)) {
+      dispatch({ type: "MARK_BILL_READ", payload: bill.id });
+    }
+  }, [bill.id, state.readBillIds, dispatch]);
   return (
     <div className="space-y-4">
       {/* Header */}

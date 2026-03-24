@@ -1,5 +1,5 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Mail, Trash2, User } from "lucide-react";
 import { BadgeGrid } from "@/components/gamification/BadgeGrid";
@@ -13,7 +13,14 @@ export default function ProfilePage() {
   const { state, dispatch } = useCivicStream();
   const { streakDays, daysUntilNextBadge, progressPercent } = useStreak();
   const { badges, reps } = useDemoData();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
+  if (!mounted) {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
   const handleResetDemo = () => {
     if (confirm("Reset demo and return to onboarding?")) {
       dispatch({ type: "RESET_DEMO" });
@@ -94,8 +101,7 @@ export default function ProfilePage() {
               {reps.reps.slice(0, 3).map((rep) => (
                 <div
                   key={rep.id}
-                  className="bg-white border border-gray-100 rounded-xl p-3 flex items-center justify-between"
-                >
+                  className="bg-white border border-gray-100 rounded-xl p-3 flex items-center justify-between">
                   <div className="flex-1">
                     <p className="font-medium text-gray-900 text-sm">
                       {rep.name}
@@ -104,8 +110,7 @@ export default function ProfilePage() {
                   </div>
                   <a
                     href={`mailto:${rep.email}`}
-                    className="px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors"
-                  >
+                    className="px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors">
                     Email
                   </a>
                 </div>
@@ -156,8 +161,7 @@ export default function ProfilePage() {
           {/* Demo Reset */}
           <button
             onClick={handleResetDemo}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-100"
-          >
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-100">
             <Trash2 className="w-4 h-4" />
             Reset Demo
           </button>

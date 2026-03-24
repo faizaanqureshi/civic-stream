@@ -40,11 +40,30 @@ function civicStreamReducer(
       if (state.readBillIds.includes(action.payload)) {
         return state;
       }
+    
+      const updatedReadBillIds = [...state.readBillIds, action.payload];
+      const updatedEarnedBadgeIds = [...state.earnedBadgeIds];
+    
+      if (
+        updatedReadBillIds.length >= 10 &&
+        !updatedEarnedBadgeIds.includes("bill-hawk")
+      ) {
+        updatedEarnedBadgeIds.push("bill-hawk");
+      }
+    
+      if (
+        updatedReadBillIds.length >= 50 &&
+        !updatedEarnedBadgeIds.includes("watchdog")
+      ) {
+        updatedEarnedBadgeIds.push("watchdog");
+      }
+    
       return {
         ...state,
-        readBillIds: [...state.readBillIds, action.payload],
+        readBillIds: updatedReadBillIds,
+        earnedBadgeIds: updatedEarnedBadgeIds,
       };
-
+      
     case "SET_FILTER":
       return { ...state, activeFilter: action.payload };
 

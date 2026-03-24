@@ -4,7 +4,11 @@
       "Bash(dir:*)",
       "Bash(pnpm add:*)",
       "Bash(pnpm build:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:openparliament.ca)",
+      "WebFetch(domain:api.openparliament.ca)",
+      "Bash(cd \"C:\\\\Users\\\\qfaiz\\\\Documents\\\\civic-stream\" && pnpm tsc --noEmit 2>&1 | head -40)",
+      "Bash(cd \"C:\\\\Users\\\\qfaiz\\\\Documents\\\\civic-stream\" && pnpm tsc --noEmit 2>&1 | head -30)"
     ]
   }
 }

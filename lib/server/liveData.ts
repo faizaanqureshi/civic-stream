@@ -59,42 +59,57 @@ function getSharedLegislationFeed(
 export async function getFederalBills(): Promise<FeedItem[]> {
   const baseUrl = "https://openparliament.ca";
   try {
-    // order_by=-introduced ensures we get 2026/2025 bills
-    const url = `${baseUrl}/bills/?format=json&limit=5&order_by=-introduced`;
+    // session=45-1 pins to current parliament
+    const url = `${baseUrl}/bills/?format=json&limit=10&order_by=-introduced&session=45-1`;
     const data = await fetchJson<any>(url);
 
     if (!data?.objects) return [];
 
-    return data.objects.map((bill: any) => {
-      const billNumber = bill.number || "Unknown";
-      const billTitle = bill.name?.en || "Legislative Measure";
-      const status = bill.status?.en || "Under Consideration";
-      const chamber =
-        bill.chamber === "hoc" ? "House of Commons" : "the Senate";
+    // Fetch detail for each bill in parallel to get status, chamber, sponsor, etc.
+    // C-1 is excluded as it's a pro forma procedural bill introduced every session
+    const details = await Promise.all(
+      data.objects.filter((bill: any) => bill.number !== "C-1").slice(0, 5).map((bill: any) =>
+        fetchJson<any>(`${baseUrl}${bill.url}?format=json`).catch(() => null)
+      )
+    );
 
-      // Construct the full URL using the relative 'url' field from the API
-      // If the API field is missing, we use a fallback pattern
-      const detailUrl = bill.url
-        ? `${baseUrl}${bill.url}`
-        : `${baseUrl}/bills/${bill.session}/${billNumber}/`;
+    return details
+      .filter((detail): detail is NonNullable<typeof detail> => detail !== null)
+      .map((detail) => {
+        const billNumber = detail.number || "Unknown";
+        const billTitle = detail.name?.en || "Legislative Measure";
+        const shortTitle = detail.short_title?.en;
+        const status = detail.status?.en || "Under Consideration";
+        const isLaw = detail.law === true;
+        const chamber =
+          detail.home_chamber === "HoC" ? "House of Commons" : "the Senate";
+        const isPrivateMember = detail.private_member_bill === true;
+        const detailUrl = `${baseUrl}${detail.url}`;
 
-      return {
-        id: `fed-bill-${billNumber}-${bill.session}`,
-        level: "Federal",
-        type: "bill",
-        title: `Bill ${billNumber}: ${billTitle}`,
-        summary: `Current status: ${status}. This federal bill is currently before ${chamber}.`,
-        // Fix: Use the actual introduction date for the feed timestamp
-        date: bill.introduced
-          ? new Date(bill.introduced).toISOString()
-          : new Date().toISOString(),
-        url: detailUrl, // Fixed: Link included here
-        isNew: true,
-        urgency: "high",
-        linkedBillId: billNumber,
-        icon: "🇨🇦",
-      };
-    });
+        const summaryParts = [
+          `Status: ${status}.`,
+          `Introduced in the ${chamber}`,
+          isPrivateMember ? "(private member's bill)" : "(government bill)",
+          isLaw ? "— now law." : ".",
+        ];
+
+        return {
+          id: `fed-bill-${billNumber}-${detail.session}`,
+          level: "Federal",
+          type: "bill",
+          title: `Bill ${billNumber}: ${shortTitle || billTitle}`,
+          summary: summaryParts.join(" "),
+          date: detail.introduced
+            ? new Date(detail.introduced).toISOString()
+            : new Date().toISOString(),
+          url: detailUrl,
+          isNew: !isLaw,
+          urgency: isLaw ? ("low" as const) : ("high" as const),
+          linkedBillId: billNumber,
+          icon: "🇨🇦",
+          status,
+        };
+      });
   } catch (err) {
     console.error("Fed Fetch Error", err);
     return [];

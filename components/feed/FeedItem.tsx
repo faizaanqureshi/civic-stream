@@ -16,7 +16,16 @@ export function FeedItem({ item, index }: FeedItemProps) {
 
   const handleClick = () => {
     if (item.linkedBillId) {
-      router.push(`/bill/${item.linkedBillId}`);
+      const params = new URLSearchParams({
+        title: item.title,
+        summary: item.summary,
+        level: item.level,
+        date: item.date,
+        ...(item.status && { status: item.status }),
+        ...(item.url && { sourceUrl: item.url }),
+        icon: item.icon,
+      });
+      router.push(`/bill/${encodeURIComponent(item.linkedBillId)}?${params.toString()}`);
     } else if (item.type === "alert" || item.type === "bill") {
       router.push("/zoning");
     }
@@ -67,10 +76,18 @@ export function FeedItem({ item, index }: FeedItemProps) {
         </p>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 text-xs text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
           <span>{formatRelativeDate(item.date)}</span>
           <span>•</span>
           <span className="capitalize">{item.type}</span>
+          {item.status && (
+            <>
+              <span>•</span>
+              <span className={`font-medium ${item.urgency === "low" ? "text-green-600" : "text-amber-600"}`}>
+                {item.status}
+              </span>
+            </>
+          )}
         </div>
       </div>
     </motion.div>

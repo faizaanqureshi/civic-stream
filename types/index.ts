@@ -108,6 +108,33 @@ export interface FeedItem {
   urgency: Urgency;
   linkedBillId: string | null;
   icon: string;
+  status?: string;
+}
+
+export interface BillVote {
+  date: string;
+  description: string;
+  yeas: number;
+  nays: number;
+  result: string;
+}
+
+export interface LiveBillDetail {
+  billNumber: string;
+  title: string;
+  shortTitle: string | null;
+  level: JurisdictionLevel;
+  status: string;
+  chamber: string | null;
+  isPrivateMember: boolean;
+  isLaw: boolean;
+  introducedDate: string;
+  sponsor: string | null;
+  sponsorUrl: string | null;
+  sourceUrl: string | null;
+  fullTextUrl: string | null;
+  votes: BillVote[];
+  rawText: string | null;
 }
 
 export interface ZoningAlert {

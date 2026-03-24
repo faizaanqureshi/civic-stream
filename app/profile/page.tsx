@@ -114,7 +114,15 @@ export default function ProfilePage() {
             <h2 className="text-sm font-semibold text-gray-900 mb-3">
               Activity History
             </h2>
-            <ActivityFeed />
+            <ActivityFeed
+              activities={[
+                {
+                  id: "1",
+                  action: "Read summary of Bill C-18",
+                  time: "2 hours ago",
+                },
+              ]}
+            />
           </div>
 
           {/* My Reps Quick Access */}

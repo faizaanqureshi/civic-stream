@@ -22,13 +22,12 @@ function statusCodeToStage(statusCode: string): { stage: number; total: number }
   return { stage: map[statusCode] ?? 1, total: 6 };
 }
 
-
 async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | null> {
   try {
     const [detail, votesData] = await Promise.all([
       fetchJson<any>(`${OPENPARL}/bills/${FEDERAL_SESSION}/${billNumber}/?format=json`),
       fetchJson<any>(
-        `${OPENPARL}/votes/?bill=${FEDERAL_SESSION}/${billNumber}&format=json`
+        `${OPENPARL}/votes/?bill=${FEDERAL_SESSION}/${billNumber}&format=json`,
       ).catch(() => ({ objects: [] })),
     ]);
 
@@ -38,7 +37,7 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
     const rawSponsorUrl = detail.sponsor_politician_url || detail.sponsor_url;
     if (rawSponsorUrl) {
       const sponsorDetail = await fetchJson<any>(
-        `${OPENPARL}${rawSponsorUrl}?format=json`
+        `${OPENPARL}${rawSponsorUrl}?format=json`,
       ).catch(() => null);
       sponsorName = sponsorDetail?.name || null;
       sponsorUrl = `${OPENPARL}${rawSponsorUrl}`;
@@ -54,7 +53,9 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
         result: v.result || "Unknown",
       }));
 
-    const fullTextUrl = detail.legisinfo_url ?? `https://www.parl.ca/legisinfo/en/bill/${FEDERAL_SESSION}/${billNumber.toLowerCase()}`;
+    const fullTextUrl =
+      detail.legisinfo_url ??
+      `https://www.parl.ca/legisinfo/en/bill/${FEDERAL_SESSION}/${billNumber.toLowerCase()}`;
     const documentViewerUrl: string | null = detail.text_url ?? null;
 
     // Get bill text — document viewer first, fall back to debates
@@ -76,7 +77,7 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
     if (!rawText) {
       try {
         const debatesData = await fetchJson<any>(
-          `${OPENPARL}/bills/${FEDERAL_SESSION}/${billNumber}/debates/?format=json`
+          `${OPENPARL}/bills/${FEDERAL_SESSION}/${billNumber}/debates/?format=json`,
         ).catch(() => null);
         const speeches: string[] = (debatesData?.objects || [])
           .slice(0, 12)
@@ -127,7 +128,7 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
 
 async function fetchProvincialBill(
   billNumber: string,
-  sourceUrl: string | null
+  sourceUrl: string | null,
 ): Promise<LiveBillDetail | null> {
   const url =
     sourceUrl ||
@@ -145,12 +146,12 @@ async function fetchProvincialBill(
     const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
 
     const statusMatch = html.match(
-      /(?:Royal Assent|Third Reading|Second Reading|First Reading|Committee|Passed|Withdrawn)[^<\n]*/i
+      /(?:Royal Assent|Third Reading|Second Reading|First Reading|Committee|Passed|Withdrawn)[^<\n]*/i,
     );
     const status = statusMatch ? statusMatch[0].trim().slice(0, 60) : "Active";
 
     const summaryMatch = html.match(
-      /(?:summary|description|purpose)[^<]*<\/[^>]+>\s*<[^>]+>([\s\S]{80,1000}?)<\/[^>]+>/i
+      /(?:summary|description|purpose)[^<]*<\/[^>]+>\s*<[^>]+>([\s\S]{80,1000}?)<\/[^>]+>/i,
     );
     const rawText = summaryMatch ? stripHtml(summaryMatch[1]).trim().slice(0, 4000) : null;
 
@@ -194,7 +195,7 @@ async function fetchProvincialBill(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const billId = decodeURIComponent(id);

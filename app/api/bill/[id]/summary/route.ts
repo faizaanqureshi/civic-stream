@@ -110,18 +110,60 @@ export async function GET(
     }
 
     if (level === "Provincial") {
-      const url = sourceUrl || `https://www.ola.org/en/legislative-business/bills/parliament-43/session-1/bill-${billNumber}`;
+      const url = sourceUrl || `https://www.ola.org/en/legislative-business/bills/parliament-44/session-1/bill-${billNumber}`;
       const html = await fetchText(url);
-      const summaryMatch = html.match(
-        /(?:summary|description|purpose)[^<]*<\/[^>]+>\s*<[^>]+>([\s\S]{80,1000}?)<\/[^>]+>/i
-      );
-      const rawText = summaryMatch ? stripHtml(summaryMatch[1]).trim() : null;
-      if (!rawText) return NextResponse.json({ error: "No bill text available" }, { status: 404 });
 
+      // Title
       const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
       const title = titleMatch ? stripHtml(titleMatch[1]).trim() : `Bill ${billNumber}`;
-      const statusMatch = html.match(/(?:Royal Assent|Third Reading|Second Reading|First Reading|Committee|Passed|Withdrawn)[^<\n]*/i);
-      const status = statusMatch ? statusMatch[0].trim().slice(0, 60) : "Active";
+
+      // Sponsor — MPP link right after h1
+      const sponsorMatch =
+        html.match(/<h1[^>]*>[\s\S]*?<\/h1>[\s\S]*?<a[^>]*href="[^"]*\/members\/[^"]*"[^>]*>([^<]+)<\/a>/i) ||
+        html.match(/(?:Sponsor|MPP|Member)[^<]*<\/[^>]+>\s*(?:<[^>]+>\s*)*([A-Z][a-zÀ-ÿ]+(?: [A-Z][a-zÀ-ÿ]+)+)/i);
+      const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
+
+      // Status — prefer "Current status:" pattern
+      const currentStatusMatch = html.match(/[Cc]urrent\s+status[:\s]+([^<\n]{5,80})/i);
+      let status = "First Reading";
+      let stage = 1;
+      if (currentStatusMatch) {
+        const raw = currentStatusMatch[1].trim();
+        const stageMap: [string, number, string][] = [
+          ["royal assent", 5, "Royal Assent"],
+          ["third reading", 4, "Third Reading"],
+          ["committee", 3, "Committee"],
+          ["second reading", 2, "Second Reading"],
+          ["first reading", 1, "First Reading"],
+        ];
+        for (const [key, num, label] of stageMap) {
+          if (raw.toLowerCase().includes(key)) { stage = num; status = label; break; }
+        }
+      } else {
+        const stageMap: Record<string, number> = {
+          "royal assent": 5, "third reading": 4, "committee": 3,
+          "second reading": 2, "first reading": 1,
+        };
+        for (const [label, num] of Object.entries(stageMap)) {
+          if (html.toLowerCase().includes(label) && num >= stage) {
+            status = label.replace(/\b\w/g, (c) => c.toUpperCase());
+            stage = num;
+          }
+        }
+      }
+
+      // Extract bill text from the main page (explanatory note + bill body are inline on OLA)
+      let rawText: string | null = null;
+      const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+      let content = mainMatch ? mainMatch[1] : html;
+      content = content.replace(/<(script|style|nav|header|footer|aside)[^>]*>[\s\S]*?<\/\1>/gi, "");
+      const noteMatch = content.match(/(?:EXPLANATORY NOTE|Bill\s+\d+[^<]*)([\s\S]{200,})/i);
+      const plain = stripHtml(noteMatch ? noteMatch[0] : content).replace(/\s{3,}/g, "\n\n").trim();
+      if (plain.length > 200) rawText = plain;
+
+      if (!rawText) {
+        return NextResponse.json({ error: "No bill text available" }, { status: 404 });
+      }
 
       const ai = await getOrGenerateAISummary({
         billNumber,
@@ -130,11 +172,11 @@ export async function GET(
         title,
         shortTitle: null,
         status,
-        isLaw: status.toLowerCase().includes("royal assent"),
+        isLaw: stage === 5,
         isPrivateMember: false,
         chamber: "Ontario Legislative Assembly",
         introducedDate: "",
-        sponsor: null,
+        sponsor,
         votes: [],
         rawText,
       });

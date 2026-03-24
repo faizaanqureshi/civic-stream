@@ -126,42 +126,82 @@ async function fetchFederalBill(billNumber: string): Promise<LiveBillDetail | nu
   }
 }
 
+function parseProvincialPage(html: string, billNumber: string) {
+  // Title from h1
+  const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const title = titleMatch ? stripHtml(titleMatch[1]).trim() : `Bill ${billNumber}`;
+
+  // Sponsor: OLA puts MPP name as an <a> link right after the bill title h1
+  // e.g. <a href="/en/members/...">Firstname Lastname</a>
+  const sponsorMatch = html.match(/<h1[^>]*>[\s\S]*?<\/h1>[\s\S]*?<a[^>]*href="[^"]*\/members\/[^"]*"[^>]*>([^<]+)<\/a>/i)
+    || html.match(/(?:Sponsor|MPP|Member)[^<]*<\/[^>]+>\s*(?:<[^>]+>\s*)*([A-Z][a-zÀ-ÿ]+(?: [A-Z][a-zÀ-ÿ]+)+)/i);
+  const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
+
+  // Date from first reading
+  const firstReadingMatch = html.match(/First Reading[\s\S]*?(\d{4}-\d{2}-\d{2}|[A-Z][a-z]+ \d+, \d{4})/i);
+  const introducedDate = firstReadingMatch ? firstReadingMatch[1] : "";
+
+  // Status: prefer "Current status: ..." pattern from OLA pages
+  const currentStatusMatch = html.match(/[Cc]urrent\s+status[:\s]+([^<\n]{5,80})/i);
+  let status = "First Reading";
+  let stage = 1;
+
+  if (currentStatusMatch) {
+    const raw = currentStatusMatch[1].trim();
+    const stageMap: [string, number, string][] = [
+      ["royal assent", 5, "Royal Assent"],
+      ["third reading", 4, "Third Reading"],
+      ["committee", 3, "Committee"],
+      ["second reading", 2, "Second Reading"],
+      ["first reading", 1, "First Reading"],
+    ];
+    for (const [key, num, label] of stageMap) {
+      if (raw.toLowerCase().includes(key)) {
+        stage = num;
+        status = label;
+        break;
+      }
+    }
+    if (stage === 1 && raw.length < 80) status = raw;
+  } else {
+    const stageMap: Record<string, number> = {
+      "royal assent": 5, "third reading": 4, "committee": 3,
+      "second reading": 2, "first reading": 1,
+    };
+    for (const [label, num] of Object.entries(stageMap)) {
+      if (html.toLowerCase().includes(label) && num >= stage) {
+        status = label.replace(/\b\w/g, (c) => c.toUpperCase());
+        stage = num;
+      }
+    }
+  }
+
+  // Extract bill text from main page — explanatory note + bill body are inline on OLA pages
+  let rawText: string | null = null;
+  const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+  let content = mainMatch ? mainMatch[1] : html;
+  // Strip scripts, styles, nav, header, footer, and the sidebar/navigation tabs
+  content = content.replace(/<(script|style|nav|header|footer|aside)[^>]*>[\s\S]*?<\/\1>/gi, "");
+  // Focus on the substantive bill content sections if present
+  const noteMatch = content.match(/(?:EXPLANATORY NOTE|Bill\s+\d+[^<]*)([\s\S]{200,})/i);
+  const plain = stripHtml(noteMatch ? noteMatch[0] : content).replace(/\s{3,}/g, "\n\n").trim();
+  if (plain.length > 200) rawText = plain;
+
+  return { title, sponsor, introducedDate, status, stage, isLaw: stage === 5, rawText };
+}
+
 async function fetchProvincialBill(
   billNumber: string,
   sourceUrl: string | null,
 ): Promise<LiveBillDetail | null> {
   const url =
     sourceUrl ||
-    `https://www.ola.org/en/legislative-business/bills/parliament-43/session-1/bill-${billNumber}`;
+    `https://www.ola.org/en/legislative-business/bills/parliament-44/session-1/bill-${billNumber}`;
 
   try {
     const html = await fetchText(url);
-
-    const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-    const title = titleMatch ? stripHtml(titleMatch[1]).trim() : `Bill ${billNumber}`;
-
-    const sponsorMatch =
-      html.match(/(?:Sponsor|Introduced by|MPP)[^<]*<\/[^>]+>\s*(?:<[^>]+>)?\s*([A-Z][^<\n]{3,60})/i) ||
-      html.match(/member[^<]*<\/[^>]+>\s*(?:<[^>]+>)?\s*([A-Z][a-z]+ [A-Z][a-z]+)/i);
-    const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
-
-    const statusMatch = html.match(
-      /(?:Royal Assent|Third Reading|Second Reading|First Reading|Committee|Passed|Withdrawn)[^<\n]*/i,
-    );
-    const status = statusMatch ? statusMatch[0].trim().slice(0, 60) : "Active";
-
-    const summaryMatch = html.match(
-      /(?:summary|description|purpose)[^<]*<\/[^>]+>\s*<[^>]+>([\s\S]{80,1000}?)<\/[^>]+>/i,
-    );
-    const rawText = summaryMatch ? stripHtml(summaryMatch[1]).trim().slice(0, 4000) : null;
-
-    const isLaw = status.toLowerCase().includes("royal assent");
-    const stageMap: Record<string, number> = {
-      "first reading": 1, "second reading": 2, "committee": 3,
-      "third reading": 4, "royal assent": 5,
-    };
-    const stageKey = Object.keys(stageMap).find((k) => status.toLowerCase().includes(k));
-    const stage = stageKey ? stageMap[stageKey] : 1;
+    const { title, sponsor, introducedDate, status, stage, isLaw, rawText } =
+      parseProvincialPage(html, billNumber);
 
     return {
       billNumber,
@@ -174,7 +214,7 @@ async function fetchProvincialBill(
       chamber: "Ontario Legislative Assembly",
       isPrivateMember: false,
       isLaw,
-      introducedDate: "",
+      introducedDate,
       sponsor,
       sponsorUrl: null,
       sourceUrl: url,

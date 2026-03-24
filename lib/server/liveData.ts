@@ -120,82 +120,87 @@ export async function getFederalBills(): Promise<FeedItem[]> {
  * PROVINCIAL (Ontario)
  * Fixed: Updated to a more stable URL for 2026
  */
+function buildProvincialSummary(html: string): string {
+  // "Current status: ..." from OLA detail pages
+  const statusMatch = html.match(/[Cc]urrent\s+status[:\s]+([^<\n]{5,120})/i);
+  const status = statusMatch ? statusMatch[1].trim() : null;
+
+  // Sponsor via /members/ link near the top
+  const sponsorMatch = html.match(
+    /<h1[^>]*>[\s\S]*?<\/h1>[\s\S]*?<a[^>]*href="[^"]*\/members\/[^"]*"[^>]*>([^<]+)<\/a>/i,
+  );
+  const sponsor = sponsorMatch ? stripHtml(sponsorMatch[1]).trim() : null;
+
+  const parts: string[] = [];
+  if (status) parts.push(`Status: ${status}.`);
+  if (sponsor) parts.push(`Introduced by ${sponsor}.`);
+  parts.push("Ontario Legislative Assembly.");
+  return parts.join(" ");
+}
+
 export async function getProvincialBills(): Promise<FeedItem[]> {
   try {
-    const url = "https://www.ola.org/en/legislative-business/bills/current";
-    const html = await fetchText(url);
-    const results: FeedItem[] = [];
+    const listingUrl = "https://www.ola.org/en/legislative-business/bills/current";
+    const html = await fetchText(listingUrl);
     const baseUrl = "https://www.ola.org";
 
-    /**
-     * PATTERN 1: The "List/Heading" format
-     * Updated to capture the anchor tag to get the relative URL
-     */
-    const listRegex =
-      /<a[^>]*href="([^"]+)"[^>]*>Bill\s+(\d+),\s+([^<,]+),\s+(\d{4})<\/a>/gi;
+    type BillStub = { billId: string; title: string; isoDate: string; billUrl: string };
+    const stubs: BillStub[] = [];
 
-    /**
-     * PATTERN 2: The "Table" format
-     * Updated to capture the link (match[2]) from the title cell
-     */
+    // PATTERN 1 — table layout
     const tableRegex =
       /views-field-field-bill-number[^>]*>[\s\S]*?Bill\s*(\d+)[\s\S]*?views-field-field-bill-title[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?datetime="([^"]+)"/gi;
-
     let match;
-
-    // Try Table Pattern first
-    while ((match = tableRegex.exec(html)) !== null && results.length < 6) {
-      const billId = match[1];
-      const relativeLink = match[2];
-      const title = stripHtml(match[3]).trim();
-      const isoDate = match[4];
-
-      results.push({
-        id: `prov-bill-2026-${billId}`,
-        level: "Provincial",
-        type: "bill",
-        title: `Bill ${billId}: ${title}`,
-        summary: "Active legislative business in the Ontario Assembly.",
-        date: isoDate,
-        url: relativeLink.startsWith("http")
-          ? relativeLink
-          : `${baseUrl}${relativeLink}`,
-        isNew: true,
-        urgency: "medium",
-        linkedBillId: billId,
-        icon: "🏛️",
+    while ((match = tableRegex.exec(html)) !== null && stubs.length < 6) {
+      stubs.push({
+        billId: match[1],
+        billUrl: match[2].startsWith("http") ? match[2] : `${baseUrl}${match[2]}`,
+        title: stripHtml(match[3]).trim(),
+        isoDate: match[4],
       });
     }
 
-    // Fallback to List Pattern 1 if no table matches
-    if (results.length === 0) {
-      while ((match = listRegex.exec(html)) !== null && results.length < 6) {
-        const relativeLink = match[1];
-        const billNumber = match[2];
-        const billTitle = match[3].trim();
+    // PATTERN 2 — list layout fallback
+    if (stubs.length === 0) {
+      const listRegex =
+        /<a[^>]*href="([^"]+)"[^>]*>Bill\s+(\d+),\s+([^<,]+),\s+(\d{4})<\/a>/gi;
+      while ((match = listRegex.exec(html)) !== null && stubs.length < 6) {
         const billYear = match[4];
-
-        results.push({
-          id: `prov-bill-2026-${billNumber}`,
-          level: "Provincial",
-          type: "bill",
-          title: `Bill ${billNumber}: ${billTitle}`,
-          summary: `Introduced in the ${billYear} legislative session.`,
-          date: new Date(`${billYear}-01-01`).toISOString(),
-          url: relativeLink.startsWith("http")
-            ? relativeLink
-            : `${baseUrl}${relativeLink}`,
-          isNew: true,
-          urgency: "medium",
-          linkedBillId: billNumber,
-          icon: "🏛️",
+        stubs.push({
+          billId: match[2],
+          billUrl: match[1].startsWith("http") ? match[1] : `${baseUrl}${match[1]}`,
+          title: match[3].trim(),
+          isoDate: new Date(`${billYear}-01-01`).toISOString(),
         });
       }
     }
 
-    console.log(`Successfully parsed ${results.length} provincial bills.`);
-    console.log("bills");
-    console.log(results);
+    // Fetch each bill detail page in parallel to get status + sponsor
+    const details = await Promise.all(
+      stubs.map((s) => fetchText(s.billUrl).catch(() => null)),
+    );
+
+    const results: FeedItem[] = stubs.map((s, i) => {
+      const detailHtml = details[i];
+      const summary = detailHtml
+        ? buildProvincialSummary(detailHtml)
+        : "Active legislative business in the Ontario Assembly.";
+
+      return {
+        id: `prov-bill-2026-${s.billId}`,
+        level: "Provincial",
+        type: "bill",
+        title: `Bill ${s.billId}: ${s.title}`,
+        summary,
+        date: s.isoDate,
+        url: s.billUrl,
+        isNew: true,
+        urgency: "medium",
+        linkedBillId: s.billId,
+        icon: "🏛️",
+      } as FeedItem;
+    });
+
     return results.sort((a, b) => b.date.localeCompare(a.date));
   } catch (err) {
     console.error("Provincial Fetch Error:", err);

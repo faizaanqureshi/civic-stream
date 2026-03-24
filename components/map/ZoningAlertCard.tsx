@@ -72,18 +72,32 @@ export function ZoningAlertCard({
         <span className="text-xs text-gray-400">
           {formatFullDate(alert.date)}
         </span>
-        {alert.linkedBillId && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/bill/${alert.linkedBillId}`);
-            }}
-            className="flex items-center gap-1 text-xs text-gray-900 font-medium hover:underline"
-          >
-            View bill
-            <ExternalLink className="w-3 h-3" />
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {alert.linkedBillId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/bill/${alert.linkedBillId}`);
+              }}
+              className="flex items-center gap-1 text-xs text-gray-900 font-medium hover:underline"
+            >
+              View bill
+              <ExternalLink className="w-3 h-3" />
+            </button>
+          )}
+          {alert.url && (
+            <a
+              href={alert.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-xs text-gray-500 font-medium hover:text-gray-900 hover:underline transition-colors"
+            >
+              Learn more
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

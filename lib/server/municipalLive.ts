@@ -146,6 +146,9 @@ async function getWaterlooZoning(): Promise<ZoningAlert[]> {
             !title.includes("Skip to main") &&
             !title.includes("Privacy Policy")
           ) {
+            const fullDetailUrl = detailUrl.startsWith("http")
+              ? detailUrl
+              : `${baseUrl}${detailUrl}`;
             items.push({
               id: `waterloo-${endpoint.name.toLowerCase()}-${detailUrl.split("/").pop()}`,
               title: title,
@@ -159,6 +162,7 @@ async function getWaterlooZoning(): Promise<ZoningAlert[]> {
                 summary.length > 200 ? `${summary.slice(0, 200)}...` : summary,
               date: new Date().toISOString(),
               linkedBillId: null,
+              url: fullDetailUrl,
             });
           }
         }
@@ -228,6 +232,9 @@ export async function getWaterlooApprovedZoning(): Promise<ZoningAlert[]> {
           // Spread pins out slightly so they don't stack directly on top of each other
           const jitter = () => (Math.random() - 0.5) * 0.02;
 
+          const fullDetailUrl = detailUrlPath.startsWith("http")
+            ? detailUrlPath
+            : `https://www.engagewr.ca${detailUrlPath}`;
           items.push({
             id: `waterloo-approved-${detailUrlPath.split("/").pop()}`,
             title: title,
@@ -240,7 +247,8 @@ export async function getWaterlooApprovedZoning(): Promise<ZoningAlert[]> {
             summary:
               summary.length > 200 ? `${summary.slice(0, 200)}...` : summary,
             date: new Date().toISOString(),
-            linkedBillId: null, // Update this if you cross-reference council bills
+            linkedBillId: null,
+            url: fullDetailUrl,
           });
         }
       }

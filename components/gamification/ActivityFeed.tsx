@@ -1,36 +1,14 @@
-const DEMO_ACTIVITIES = [
-  {
-    id: "1",
-    action: "Read summary of Bill C-18",
-    time: "2 hours ago",
-  },
-  {
-    id: "2",
-    action: "Viewed Lobby Disclosure: Dairy Farmers of Canada",
-    time: "2 hours ago",
-  },
-  {
-    id: "3",
-    action: "Checked Zoning Alert: Derry Heights Rezoning",
-    time: "Yesterday",
-  },
-  {
-    id: "4",
-    action: "Read Bill 23 summary",
-    time: "3 days ago",
-  },
-  {
-    id: "5",
-    action: "Signed petition: Protect Local Farmland",
-    time: "5 days ago",
-  },
-];
+import type { Activity } from "@/types";
 
-export function ActivityFeed() {
+interface ActivityFeedProps {
+  activities: Activity[];
+}
+
+export function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-4">
       <div className="space-y-3">
-        {DEMO_ACTIVITIES.map((activity) => (
+        {activities.map((activity) => (
           <div
             key={activity.id}
             className="flex items-start gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"

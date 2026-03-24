@@ -177,6 +177,9 @@ export interface CivicStreamState {
   readBillIds: string[];
   earnedBadgeIds: string[];
   activeFilter: "all" | "Federal" | "Provincial" | "Municipal";
+
+  //totalPoints?: number;
+  //recentActivity?: UserActivityEvent[];
 }
 
 export type CivicStreamAction =
@@ -197,4 +200,35 @@ export interface Activity {
   id: string;
   action: string;
   time: string;
+}
+
+export type ActivityEventType =
+  | "bill_read"
+  | "petition_signed"
+  | "zoning_alert_viewed"
+  | "lobby_disclosure_viewed"
+  | "badge_earned";
+
+export interface UserGamification {
+  userId: string;
+  totalPoints: number;
+  streakDays: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+}
+
+export interface UserActivityEvent {
+  id: string;
+  userId: string;
+  type: ActivityEventType;
+  title: string;
+  pointsAwarded: number;
+  relatedId?: string | null;
+  createdAt: string;
+}
+
+export interface UserBadge {
+  userId: string;
+  badgeId: string;
+  earnedAt: string;
 }

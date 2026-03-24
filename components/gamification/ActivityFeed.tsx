@@ -1,26 +1,23 @@
-import type { Activity } from "@/types";
+import { formatRelativeDate } from "@/lib/utils/formatDate";
 
-interface ActivityFeedProps {
-  activities: Activity[];
-}
+// Inside ActivityFeed component
+export function ActivityFeed({ activities }: { activities: any[] }) {
+  // Ensure we only show 5
+  const displayActivities = activities.slice(0, 5);
 
-export function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4">
-      <div className="space-y-3">
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="flex items-start gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm text-gray-900">{activity.action}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-3">
+      {displayActivities.map((activity) => (
+        <div
+          key={activity.id}
+          className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-700 font-medium">{activity.action}</p>
+          <span className="text-[10px] text-gray-400 uppercase font-bold">
+            {/* formatRelativeDate converts ISO string to "Just now" or "Mar 24" */}
+            {formatRelativeDate(activity.time)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

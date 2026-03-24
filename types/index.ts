@@ -166,6 +166,9 @@ export interface Badge {
   icon: string;
   earned: boolean;
   earnedDate: string | null;
+  target: number;
+  metric: string;
+  color: string;
 }
 
 export interface CivicStreamState {
@@ -177,24 +180,34 @@ export interface CivicStreamState {
   readBillIds: string[];
   earnedBadgeIds: string[];
   activeFilter: "all" | "Federal" | "Provincial" | "Municipal";
-
-  //totalPoints?: number;
-  //recentActivity?: UserActivityEvent[];
+  zoningClickIds: string[];
+  externalClickUrls: string[];
+  points: number;
+  lastCelebratedLevel: number;
+  activities: {
+    id: string;
+    action: string;
+    time: string;
+  }[];
 }
 
 export type CivicStreamAction =
+  | { type: "SYNC_FROM_SUPABASE"; payload: Partial<CivicStreamState> }
+  | { type: "TRACK_EXTERNAL_CLICK"; payload: string }
   | { type: "SET_POSTAL_CODE"; payload: string }
   | {
       type: "COMPLETE_ONBOARDING";
       payload: { postalCode: string; riding: string };
     }
   | { type: "MARK_BILL_READ"; payload: string }
+  | { type: "TRACK_ZONING_CLICK"; payload: string } // New: Handles zoning gamification
   | {
       type: "SET_FILTER";
       payload: "all" | "Federal" | "Provincial" | "Municipal";
     }
   | { type: "INCREMENT_STREAK" }
-  | { type: "RESET_DEMO" };
+  | { type: "RESET_DEMO" }
+  | { type: "ACKNOWLEDGE_LEVEL_UP"; payload: number };
 
 export interface Activity {
   id: string;

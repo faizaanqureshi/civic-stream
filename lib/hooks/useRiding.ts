@@ -45,7 +45,10 @@ export function useRiding(postalCode: string | null) {
           setState({
             data: null,
             loading: false,
-            error: error instanceof Error ? error.message : "Unable to load riding data.",
+            error:
+              error instanceof Error
+                ? error.message
+                : "Unable to load riding data.",
           });
         }
       }

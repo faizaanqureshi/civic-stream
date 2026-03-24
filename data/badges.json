@@ -1,38 +1,56 @@
 [
   {
-    "id": "watchdog",
-    "name": "The Watchdog",
-    "description": "Read 50 bills",
-    "icon": "dog"
-  },
-  {
-    "id": "delegate",
-    "name": "The Delegate",
-    "description": "Signed a petition",
-    "icon": "clipboard-check"
-  },
-  {
-    "id": "local-hero",
-    "name": "Local Hero",
-    "description": "Attended a council meeting",
-    "icon": "building-2"
-  },
-  {
     "id": "bill-hawk",
     "name": "Bill Hawk",
-    "description": "Read 10 bills in one week",
-    "icon": "eye"
+    "description": "Read 5 bills",
+    "icon": "eye",
+    "color": "bg-orange-500",
+    "metric": "bills",
+    "target": 5
   },
   {
-    "id": "lobbyist",
-    "name": "Follow the Money",
-    "description": "Viewed 5 lobby disclosures",
-    "icon": "dollar-sign"
+    "id": "watchdog",
+    "name": "The Watchdog",
+    "description": "Read 10 bills",
+    "icon": "dog",
+    "color": "bg-blue-500",
+    "metric": "bills",
+    "target": 10
+  },
+  {
+    "id": "urbanist",
+    "name": "Urbanist",
+    "description": "View 3 zoning alerts",
+    "icon": "map",
+    "color": "bg-teal-500",
+    "metric": "zoning",
+    "target": 3
+  },
+  {
+    "id": "explorer",
+    "name": "Explorer",
+    "description": "Explore 5 external sources",
+    "icon": "compass",
+    "color": "bg-indigo-500",
+    "metric": "links",
+    "target": 5
+  },
+  {
+    "id": "streak-7",
+    "name": "7-Day Streak",
+    "description": "7 consecutive days active",
+    "icon": "flame",
+    "color": "bg-red-500",
+    "metric": "streak",
+    "target": 7
   },
   {
     "id": "streak-30",
-    "name": "30-Day Civic Streak",
+    "name": "30-Day Streak",
     "description": "30 consecutive days active",
-    "icon": "flame"
+    "icon": "flame",
+    "color": "bg-purple-600",
+    "metric": "streak",
+    "target": 30
   }
 ]

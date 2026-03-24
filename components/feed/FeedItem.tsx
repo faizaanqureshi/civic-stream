@@ -26,7 +26,9 @@ export function FeedItem({ item, index }: FeedItemProps) {
         icon: item.icon,
       });
       router.push(`/bill/${encodeURIComponent(item.linkedBillId)}?${params.toString()}`);
-    } else if (item.type === "alert" || item.type === "bill") {
+    } else if (item.url) {
+      window.open(item.url, "_blank", "noopener,noreferrer");
+    } else if (item.type === "alert") {
       router.push("/zoning");
     }
   };

@@ -79,10 +79,6 @@ export function RepCard({ rep }: RepCardProps) {
             {rep.level}
           </span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">Attendance</span>
-          <span className="text-sm text-gray-900 font-medium">{rep.attendance}%</span>
-        </div>
       </div>
 
       {/* Email Link */}

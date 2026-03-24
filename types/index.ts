@@ -156,6 +156,7 @@ export interface ZoningAlert {
   summary: string;
   date: string;
   linkedBillId: string | null;
+  url?: string;
 }
 
 export interface Badge {

@@ -18,10 +18,11 @@ import { useRiding } from "@/lib/hooks/useRiding";
 import { normalizePostalCode } from "@/lib/utils/postalCode";
 import { useAuth } from "@/lib/hooks/useAuth"; // Adjust path if necessary
 import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation"; // Add this import
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { dispatch } = useCivicStream();
+  const { dispatch, state } = useCivicStream();
   const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
 
@@ -34,6 +35,9 @@ export default function OnboardingPage() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
+  const searchParams = useSearchParams();
+  const isEditing = searchParams.get("edit") === "true";
+
   // Postal States
   const [postalCode, setPostalCode] = useState("");
   const normalizedPostalCode = normalizePostalCode(postalCode);
@@ -44,12 +48,27 @@ export default function OnboardingPage() {
   } = useRiding(normalizedPostalCode);
   const detected = Boolean(ridingData);
 
-  // Skip auth step if already logged in
   useEffect(() => {
     if (user) {
-      setStep("postal");
+      const metadata = user.user_metadata;
+      const hasMetadata = metadata?.postal_code && metadata?.riding;
+
+      // ONLY redirect if they have metadata AND we are NOT in edit mode
+      if (hasMetadata && !isEditing) {
+        dispatch({
+          type: "COMPLETE_ONBOARDING",
+          payload: {
+            postalCode: metadata.postal_code,
+            riding: metadata.riding,
+          },
+        });
+        router.push("/feed");
+      } else {
+        // If we ARE editing, or they have no data, stay on the postal step
+        setStep("postal");
+      }
     }
-  }, [user]);
+  }, [user, isEditing, dispatch, router]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +81,6 @@ export default function OnboardingPage() {
             email,
             password,
             options: {
-              // This ensures metadata is attached even if confirmation was on
               data: { display_name: email.split("@")[0] },
             },
           })
@@ -73,11 +91,22 @@ export default function OnboardingPage() {
         return;
       }
 
-      // If we have a session (which we will with "Confirm Email" OFF)
-      if (data.session) {
-        setStep("postal");
-        // Prefetch the feed so it loads instantly when they finish
-        router.prefetch("/feed");
+      if (data.user) {
+        const metadata = data.user.user_metadata;
+
+        // If logging in and we already have the data, skip the postal step
+        if (metadata?.postal_code && metadata?.riding) {
+          dispatch({
+            type: "COMPLETE_ONBOARDING",
+            payload: {
+              postalCode: metadata.postal_code,
+              riding: metadata.riding,
+            },
+          });
+          router.push("/feed");
+        } else {
+          setStep("postal");
+        }
       }
     } catch (err) {
       setAuthError("An unexpected error occurred.");
@@ -90,26 +119,14 @@ export default function OnboardingPage() {
     setPostalCode(value.toUpperCase());
   };
 
+  // Inside OnboardingPage.tsx
   const handleStartFeed = async () => {
     if (!ridingData) return;
 
     setIsCompleting(true);
     try {
-      // 1. Get the current user directly from the source to avoid hook lag
-      const {
-        data: { user: currentUser },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !currentUser) {
-        setAuthError(
-          "Authentication session not found. Please try logging in again.",
-        );
-        setStep("auth");
-        return;
-      }
-
-      // 2. Save location data to Supabase user metadata
+      // 1. Update the Supabase User Metadata
+      // This is the permanent database update
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
           postal_code: ridingData.postal,
@@ -119,7 +136,8 @@ export default function OnboardingPage() {
 
       if (updateError) throw updateError;
 
-      // 3. Update local context
+      // 2. Update the Local Context
+      // This makes the change immediate in the UI (TopBar, Feed, etc.)
       dispatch({
         type: "COMPLETE_ONBOARDING",
         payload: {
@@ -128,13 +146,10 @@ export default function OnboardingPage() {
         },
       });
 
-      // 4. Force navigation to the feed
-      // We use window.location.href or router.refresh() if push feels "stuck"
+      // 3. Navigate home
       router.push("/feed");
     } catch (err: any) {
-      setAuthError(
-        err.message || "Failed to save your location. Please try again.",
-      );
+      setAuthError(err.message || "Failed to save your new location.");
     } finally {
       setIsCompleting(false);
     }

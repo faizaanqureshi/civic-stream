@@ -1,16 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Mail, Trash2, User } from "lucide-react";
+import { Bell, Mail, LogOut, User, MapPin, ChevronRight } from "lucide-react";
 import { BadgeGrid } from "@/components/gamification/BadgeGrid";
 import { ActivityFeed } from "@/components/gamification/ActivityFeed";
 import { useCivicStream } from "@/context/CivicStreamContext";
 import { useStreak } from "@/lib/hooks/useStreak";
 import { useDemoData } from "@/lib/hooks/useDemoData";
 import { useRiding } from "@/lib/hooks/useRiding";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const supabase = createClient();
   const { state, dispatch } = useCivicStream();
   const { streakDays, daysUntilNextBadge, progressPercent } = useStreak();
   const { badges, reps } = useDemoData();
@@ -19,7 +21,25 @@ export default function ProfilePage() {
     setMounted(true);
   }, []);
   const { data: repsData } = useRiding(state.postalCode);
+  const handleLogout = async () => {
+    if (confirm("Are you sure you want to log out?")) {
+      // 1. Sign out from Supabase (clears cookies/localstorage)
+      await supabase.auth.signOut();
 
+      // 2. Clear local app state
+      dispatch({ type: "RESET_DEMO" });
+
+      // 3. Send back to onboarding
+      router.push("/onboarding");
+    }
+  };
+  const handleChangePostalCode = () => {
+    // 1. Reset the local context state so the onboarding knows we are editing
+    dispatch({ type: "RESET_DEMO" });
+
+    // 2. Send them to onboarding
+    router.push("/onboarding?edit=true");
+  };
   if (!mounted) {
     return <div className="min-h-screen bg-gray-50" />;
   }
@@ -172,17 +192,42 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">
+              Your Location
+            </h2>
+            <button
+              onClick={handleChangePostalCode}
+              className="w-full bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-[#0F9B7A]" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-gray-900">
+                    {state.postalCode}
+                  </p>
+                  <p className="text-xs text-gray-500">{state.riding}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-[#0F9B7A] text-xs font-bold">
+                Change
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </button>
+          </div>
           {/* Demo Reset */}
-          <button
-            onClick={handleResetDemo}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-100">
-            <Trash2 className="w-4 h-4" />
-            Reset Demo
-          </button>
+          <div className="pt-4">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-gray-600 text-sm font-bold rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all border border-gray-200">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
 
-          <div className="text-center text-xs text-gray-400 pt-2">
-            <p>CivicStream Demo v1.0</p>
+            <div className="text-center text-[10px] text-gray-400 mt-6 uppercase tracking-widest">
+              <p>CivicStream v1.0.4</p>
+            </div>
           </div>
         </div>
       </div>

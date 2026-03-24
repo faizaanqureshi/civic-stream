@@ -1,5 +1,4 @@
-// lib/hooks/useAuth.ts (or wherever you keep your hooks)
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "../supabase/client";
 
@@ -8,23 +7,22 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize the browser client
-  const supabase = createClient();
+  // useMemo ensures we aren't "re-grabbing" the client on every render
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const getInitialSession = async () => {
-      try {
-        const {
-          data: { session: initialSession },
-        } = await supabase.auth.getSession();
+    let mounted = true;
+
+    async function getInitialSession() {
+      const {
+        data: { session: initialSession },
+      } = await supabase.auth.getSession();
+      if (mounted) {
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
-      } catch (error) {
-        console.error("Error fetching initial session:", error);
-      } finally {
         setLoading(false);
       }
-    };
+    }
 
     getInitialSession();
 
@@ -32,24 +30,19 @@ export function useAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, currentSession: Session | null) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setLoading(false);
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setLoading(false);
+        }
       },
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [supabase]);
 
-  return {
-    user,
-    session,
-    loading,
-    isAuthenticated: !!user,
-    // Helper to get specific metadata we saved during onboarding
-    postalCode: user?.user_metadata?.postal_code || null,
-    riding: user?.user_metadata?.riding || null,
-  };
+  return { user, session, loading };
 }

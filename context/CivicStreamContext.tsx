@@ -52,18 +52,22 @@ function civicStreamReducer(
       ) {
         updatedEarnedBadgeIds.push("bill-hawk");
       }
-    
       if (
         updatedReadBillIds.length >= 50 &&
         !updatedEarnedBadgeIds.includes("watchdog")
       ) {
         updatedEarnedBadgeIds.push("watchdog");
       }
-    
+      const newActivity = {
+        id: Date.now().toString(),
+        action: `Read bill ${action.payload}`,
+        time: "Just now",
+      };
       return {
         ...state,
         readBillIds: updatedReadBillIds,
         earnedBadgeIds: updatedEarnedBadgeIds,
+        activities: [newActivity, ...(state.activities || [])]
       };
       
     case "SET_FILTER":

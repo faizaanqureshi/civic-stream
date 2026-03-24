@@ -1,14 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
 import type { CivicStreamState, CivicStreamAction } from "@/types";
-
+const now = new Date().toISOString().split("T")[0];
 const initialState: CivicStreamState = {
   postalCode: null,
   riding: null,
   onboardingComplete: false,
   streakDays: 10,
-  lastActiveDate: new Date().toISOString().split("T")[0],
+  lastActiveDate: now,
   readBillIds: ["bill-1", "bill-2"],
   earnedBadgeIds: ["watchdog", "delegate", "local-hero"],
   activeFilter: "all",
@@ -16,7 +22,7 @@ const initialState: CivicStreamState = {
 
 function civicStreamReducer(
   state: CivicStreamState,
-  action: CivicStreamAction
+  action: CivicStreamAction,
 ): CivicStreamState {
   switch (action.type) {
     case "SET_POSTAL_CODE":
@@ -59,24 +65,28 @@ interface CivicStreamContextType {
 }
 
 const CivicStreamContext = createContext<CivicStreamContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function CivicStreamProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(civicStreamReducer, initialState, (initial) => {
-    // Try to load from localStorage on client
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("civicStreamState");
-      if (saved) {
-        try {
-          return { ...initial, ...JSON.parse(saved) };
-        } catch {
-          return initial;
+  const [state, dispatch] = useReducer(
+    civicStreamReducer,
+    initialState,
+    (initial) => {
+      // Try to load from localStorage on client
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("civicStreamState");
+        if (saved) {
+          try {
+            return { ...initial, ...JSON.parse(saved) };
+          } catch {
+            return initial;
+          }
         }
       }
-    }
-    return initial;
-  });
+      return initial;
+    },
+  );
 
   // Persist to localStorage on state change
   useEffect(() => {

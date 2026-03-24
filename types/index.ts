@@ -3,7 +3,13 @@
 export type JurisdictionLevel = "Federal" | "Provincial" | "Municipal";
 export type SupportedMunicipality = "Milton" | "Waterloo";
 
-export type FeedItemType = "bill" | "meeting" | "petition" | "alert" | "lobbywatch" | "budget";
+export type FeedItemType =
+  | "bill"
+  | "meeting"
+  | "petition"
+  | "alert"
+  | "lobbywatch"
+  | "budget";
 
 export type BillStatus =
   | "First Reading"
@@ -18,9 +24,19 @@ export type LobbyPosition = "For" | "Against" | "Neutral";
 
 export type Urgency = "low" | "medium" | "high";
 
-export type ZoningAlertType = "Rezoning" | "New Development" | "Infrastructure" | "Heritage";
+export type ZoningAlertType =
+  | "Rezoning"
+  | "New Development"
+  | "Infrastructure"
+  | "Heritage"
+  | "Development Application"
+  | "Planning Application";
 
-export type ZoningAlertStatus = "Active" | "Approved" | "Under Review" | "Proposed";
+export type ZoningAlertStatus =
+  | "Active"
+  | "Approved"
+  | "Under Review"
+  | "Proposed";
 
 export interface Rep {
   id: string;
@@ -85,6 +101,7 @@ export interface FeedItem {
   level: JurisdictionLevel;
   type: FeedItemType;
   title: string;
+  url?: string;
   summary: string;
   date: string;
   isNew: boolean;
@@ -129,9 +146,15 @@ export interface CivicStreamState {
 
 export type CivicStreamAction =
   | { type: "SET_POSTAL_CODE"; payload: string }
-  | { type: "COMPLETE_ONBOARDING"; payload: { postalCode: string; riding: string } }
+  | {
+      type: "COMPLETE_ONBOARDING";
+      payload: { postalCode: string; riding: string };
+    }
   | { type: "MARK_BILL_READ"; payload: string }
-  | { type: "SET_FILTER"; payload: "all" | "Federal" | "Provincial" | "Municipal" }
+  | {
+      type: "SET_FILTER";
+      payload: "all" | "Federal" | "Provincial" | "Municipal";
+    }
   | { type: "INCREMENT_STREAK" }
   | { type: "RESET_DEMO" };
 
